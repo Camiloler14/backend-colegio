@@ -1,4 +1,4 @@
-import sequelize from './config/db.js';
+gimport sequelize from './config/db.js';
 
 (async () => {
   try {
@@ -8,3 +8,6 @@ import sequelize from './config/db.js';
     console.error('🔴 No se pudo conectar a la base de datos:', error);
   }
 })();
+
+
+

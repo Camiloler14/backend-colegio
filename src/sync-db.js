@@ -45,3 +45,4 @@ Materia.belongsTo(Docente, {
     await sequelize.close();
   }
 })();
+

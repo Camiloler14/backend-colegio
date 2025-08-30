@@ -20,3 +20,4 @@ export async function actualizarDocenteService(documento, datos) {
 export async function eliminarDocenteService(documento) {
   return await docenteRepository.eliminarDocente(documento);
 }
+

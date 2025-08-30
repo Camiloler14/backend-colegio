@@ -71,3 +71,5 @@ export async function eliminarDocente(req, res) {
     return res.status(500).json({ mensaje: error.message });
   }
 }
+
+

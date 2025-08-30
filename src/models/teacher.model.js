@@ -18,3 +18,5 @@ const Docente = sequelize.define('Docente', {
 });
 
 export default Docente;
+
+

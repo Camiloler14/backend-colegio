@@ -215,3 +215,4 @@ router.put('/teachers/:documento', verificarToken, actualizarDocente);
 router.delete('/teachers/:documento', verificarToken, eliminarDocente);
 
 export default router;
+
