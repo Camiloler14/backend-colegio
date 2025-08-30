@@ -1,4 +1,4 @@
-name: Verificación conexión DB con Sequelize
+name: Verificación conexión Base de datos con Sequelize
 
 on:
   push:

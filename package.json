@@ -1,8 +1,7 @@
 {
   "name": "backend-colegio",
   "version": "1.0.0",
-  "description": "Backend Colegio",
-  "type": "module",
+  "description": "Backend colegio",
   "main": "index.js",
   "scripts": {
     "test": "jest"
