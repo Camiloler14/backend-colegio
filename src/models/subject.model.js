@@ -37,3 +37,5 @@ const Materia = sequelize.define('Materia', {
 
 export default Materia;
 
+
+

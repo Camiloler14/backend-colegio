@@ -1,6 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/db.js';
 
+// modelo estudiante
 const Estudiante = sequelize.define('Estudiante', {
   identificacion: { type: DataTypes.STRING, allowNull: false, unique: true },
   primerNombre: { type: DataTypes.STRING, allowNull: false },
