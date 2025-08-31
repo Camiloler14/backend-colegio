@@ -1,6 +1,5 @@
 import sequelize from './config/db.js';
 import Admin from './models/admin.model.js';
-import Estudiante from './models/student.model.js';
 import Docente from './models/teacher.model.js';
 import Materia from './models/subject.model.js';
 
@@ -23,7 +22,7 @@ Materia.belongsTo(Docente, {
     await sequelize.sync({ alter: true });
     console.log('Tablas sincronizadas correctamente');
 
-    const [admin, creado] = await Admin.findOrCreate({
+    const [creado] = await Admin.findOrCreate({
       where: { usuario: 'admin' },
       defaults: { contraseña: 'admin123' } 
     });
