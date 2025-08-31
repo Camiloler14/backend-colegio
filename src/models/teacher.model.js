@@ -11,7 +11,7 @@ const Docente = sequelize.define('Docente', {
   telefono: { type: DataTypes.STRING(15), allowNull: true },
   direccion: { type: DataTypes.TEXT, allowNull: true },
   fecha_ingreso: { type: DataTypes.DATE, allowNull: false },
-  documento: { type: DataTypes.STRING(20), allowNull: false, unique: true }
+  documento: { type: DataTypes.INTEGER, allowNull: false, unique: true }
 }, {
   tableName: 'docentes',
   timestamps: false

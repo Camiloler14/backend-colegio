@@ -27,14 +27,14 @@ const EstudianteRepository = {
     });
   },
 
-  actualizar: async (id, data) => {
-    const estudiante = await Estudiante.findByPk(id);
+  actualizarPorIdentificacion: async (identificacion, data) => {
+    const estudiante = await Estudiante.findOne({ where: { identificacion } });
     if (!estudiante) return null;
     return await estudiante.update(data);
   },
 
-  eliminar: async (id) => {
-    const estudiante = await Estudiante.findByPk(id);
+  eliminarPorIdentificacion: async (identificacion) => {
+    const estudiante = await Estudiante.findOne({ where: { identificacion } });
     if (!estudiante) return false;
     await estudiante.destroy();
     return true;
@@ -44,8 +44,8 @@ const EstudianteRepository = {
     return await Estudiante.findAll();
   },
 
-  obtenerPorId: async (id) => {
-    return await Estudiante.findByPk(id);
+  obtenerPorIdentificacion: async (identificacion) => {
+    return await Estudiante.findOne({ where: { identificacion } });
   },
 };
 
