@@ -1,6 +1,6 @@
 module.exports = {
   transform: {
-    '^.+\\.jsx?$': 'babel-jest', // Transforma .js y .jsx con Babel
+    '^.+\\.jsx?$': 'babel-jest'
   },
-  testEnvironment: 'node', // Asegura que Jest use un entorno de Node.js
+  testEnvironment: 'node'
 };

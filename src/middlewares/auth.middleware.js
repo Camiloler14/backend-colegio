@@ -22,7 +22,7 @@ export function verificarToken(req, res, next) {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.admin = decoded;  // Guarda la información decodificada en la solicitud
     next();  // Continúa con la ejecución de la siguiente función de middleware o controlador
-  } catch (err) {
+  } catch {
     return res.status(403).json({ mensaje: 'Token inválido o expirado' });
   }
 }
