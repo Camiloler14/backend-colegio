@@ -12,7 +12,7 @@ describe('Modelo Estudiante', () => {
 
   test('debería crear un estudiante válido', async () => {
     const estudianteData = {
-      identificacion: '12345678',
+      identificacion: 12345678,
       primerNombre: 'Ana',
       primerApellido: 'Gomez',
       edad: 15,
@@ -25,8 +25,8 @@ describe('Modelo Estudiante', () => {
       ciudad: 'Ciudad',
       fechaMatricula: '2025-01-10',
       fechaIngreso: '2025-01-10',
-      antiguedad: 0,
-      grado: '10',
+      antiguedad: '2025-01-10',
+      grado: 10,
       estado: 'Activo',
     };
 

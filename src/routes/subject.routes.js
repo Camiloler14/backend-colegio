@@ -13,6 +13,48 @@ const router = Router();
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     Materia:
+ *       type: object
+ *       properties:
+ *         codigo:
+ *           type: string
+ *           example: ESP101
+ *         nombre:
+ *           type: string
+ *           example: Español
+ *         intensidad_horaria:
+ *           type: integer
+ *           example: 5
+ *         docenteDocumento:
+ *           type: integer
+ *           example: 1234
+ *
+ *     MateriaInput:
+ *       type: object
+ *       required:
+ *         - codigo
+ *         - nombre
+ *         - intensidad_horaria
+ *         - docenteDocumento
+ *       properties:
+ *         codigo:
+ *           type: string
+ *           example: ESP101
+ *         nombre:
+ *           type: string
+ *           example: Español
+ *         intensidad_horaria:
+ *           type: integer
+ *           example: 5
+ *         docenteDocumento:
+ *           type: integer
+ *           example: 1234
+ */
+
+/**
+ * @swagger
  * /subjects:
  *   get:
  *     security:
@@ -35,19 +77,19 @@ router.get('/subjects', verificarToken, subjectController.getAllSubjects);
 
 /**
  * @swagger
- * /subjects/{id}:
+ * /subjects/{codigo}:
  *   get:
  *     security:
  *       - bearerAuth: []
- *     summary: Obtener una materia por ID
+ *     summary: Obtener una materia por código
  *     tags: [Materias]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: codigo
  *         schema:
- *           type: integer
+ *           type: string
  *         required: true
- *         description: ID de la materia
+ *         description: Código de la materia (ej. MAT101)
  *     responses:
  *       200:
  *         description: Materia encontrada
@@ -60,7 +102,7 @@ router.get('/subjects', verificarToken, subjectController.getAllSubjects);
  *       401:
  *         description: Token no proporcionado o inválido
  */
-router.get('/subjects/:id', verificarToken, subjectController.getSubjectById);
+router.get('/subjects/:codigo', verificarToken, subjectController.getSubjectByCodigo);
 
 /**
  * @swagger
@@ -83,6 +125,8 @@ router.get('/subjects/:id', verificarToken, subjectController.getSubjectById);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Materia'
+ *       400:
+ *         description: Datos inválidos
  *       401:
  *         description: Token no proporcionado o inválido
  */
@@ -90,19 +134,19 @@ router.post('/subjects', verificarToken, subjectController.createSubject);
 
 /**
  * @swagger
- * /subjects/{id}:
+ * /subjects/{codigo}:
  *   put:
  *     security:
  *       - bearerAuth: []
- *     summary: Actualizar una materia existente
+ *     summary: Actualizar una materia por código
  *     tags: [Materias]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: codigo
  *         schema:
- *           type: integer
+ *           type: string
  *         required: true
- *         description: ID de la materia
+ *         description: Código de la materia (ej. MAT101)
  *     requestBody:
  *       required: true
  *       content:
@@ -121,23 +165,23 @@ router.post('/subjects', verificarToken, subjectController.createSubject);
  *       401:
  *         description: Token no proporcionado o inválido
  */
-router.put('/subjects/:id', verificarToken, subjectController.updateSubject);
+router.put('/subjects/:codigo', verificarToken, subjectController.updateSubjectByCodigo);
 
 /**
  * @swagger
- * /subjects/{id}:
+ * /subjects/{codigo}:
  *   delete:
  *     security:
  *       - bearerAuth: []
- *     summary: Eliminar una materia por ID
+ *     summary: Eliminar una materia por código
  *     tags: [Materias]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: codigo
  *         schema:
- *           type: integer
+ *           type: string
  *         required: true
- *         description: ID de la materia
+ *         description: Código de la materia (ej. MAT101)
  *     responses:
  *       200:
  *         description: Materia eliminada correctamente
@@ -146,7 +190,7 @@ router.put('/subjects/:id', verificarToken, subjectController.updateSubject);
  *             schema:
  *               type: object
  *               properties:
- *                 message:
+ *                 mensaje:
  *                   type: string
  *                   example: Materia eliminada correctamente
  *       404:
@@ -154,6 +198,6 @@ router.put('/subjects/:id', verificarToken, subjectController.updateSubject);
  *       401:
  *         description: Token no proporcionado o inválido
  */
-router.delete('/subjects/:id', verificarToken, subjectController.deleteSubject);
+router.delete('/subjects/:codigo', verificarToken, subjectController.deleteSubjectByCodigo);
 
 export default router;

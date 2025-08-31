@@ -1,7 +1,7 @@
 import {
   crearEstudianteService,
   obtenerEstudiantesService,
-  obtenerEstudiantePorIdService,
+  obtenerEstudiantePorIdentificacionService,
   actualizarEstudianteService,
   eliminarEstudianteService
 } from '../services/student.service.js';
@@ -29,7 +29,7 @@ export async function crearEstudiante(req, res) {
   console.log('Datos recibidos:', req.body);
 
   if (
-    !identificacion ||
+    typeof identificacion !== 'number' ||
     !primerNombre ||
     !primerApellido ||
     !genero ||
@@ -41,12 +41,12 @@ export async function crearEstudiante(req, res) {
     !ciudad ||
     !fechaMatricula ||
     !fechaIngreso ||
-    !grado ||
-    !estado ||
+    typeof grado !== 'number' ||
     typeof edad !== 'number' ||
-    typeof antiguedad !== 'number'
+    !estado ||
+    !antiguedad
   ) {
-    return res.status(400).json({ mensaje: 'Faltan campos obligatorios' });
+    return res.status(400).json({ mensaje: 'Faltan campos obligatorios o tipos inválidos' });
   }
 
   try {
@@ -69,9 +69,10 @@ export async function obtenerEstudiantes(req, res) {
 }
 
 export async function obtenerEstudiante(req, res) {
-  const { id } = req.params;
+  const { identificacion } = req.params;
+
   try {
-    const estudiante = await obtenerEstudiantePorIdService(id);
+    const estudiante = await obtenerEstudiantePorIdentificacionService(parseInt(identificacion));
     if (!estudiante) {
       return res.status(404).json({ mensaje: 'Estudiante no encontrado' });
     }
@@ -83,11 +84,11 @@ export async function obtenerEstudiante(req, res) {
 }
 
 export async function actualizarEstudiante(req, res) {
-  const { id } = req.params;
+  const { identificacion } = req.params;
   const datos = req.body;
 
   try {
-    const estudianteActualizado = await actualizarEstudianteService(id, datos);
+    const estudianteActualizado = await actualizarEstudianteService(parseInt(identificacion), datos);
     if (!estudianteActualizado) {
       return res.status(404).json({ mensaje: 'Estudiante no encontrado' });
     }
@@ -99,10 +100,10 @@ export async function actualizarEstudiante(req, res) {
 }
 
 export async function eliminarEstudiante(req, res) {
-  const { id } = req.params;
+  const { identificacion } = req.params;
 
   try {
-    const eliminado = await eliminarEstudianteService(id);
+    const eliminado = await eliminarEstudianteService(parseInt(identificacion));
     if (!eliminado) {
       return res.status(404).json({ mensaje: 'Estudiante no encontrado' });
     }

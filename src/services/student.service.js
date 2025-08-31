@@ -8,14 +8,20 @@ export async function crearEstudianteService(data) {
   }
 }
 
-export async function actualizarEstudianteService(id, data) {
-  const estudiante = await EstudianteRepository.actualizar(id, data);
-  return estudiante;
+export async function actualizarEstudianteService(identificacion, data) {
+  try {
+    return await EstudianteRepository.actualizarPorIdentificacion(identificacion, data);
+  } catch (error) {
+    throw new Error('Error actualizando estudiante: ' + error.message);
+  }
 }
 
-export async function eliminarEstudianteService(id) {
-  const eliminado = await EstudianteRepository.eliminar(id);
-  return eliminado;
+export async function eliminarEstudianteService(identificacion) {
+  try {
+    return await EstudianteRepository.eliminarPorIdentificacion(identificacion);
+  } catch (error) {
+    throw new Error('Error eliminando estudiante: ' + error.message);
+  }
 }
 
 export async function obtenerEstudiantesService() {
@@ -26,9 +32,9 @@ export async function obtenerEstudiantesService() {
   }
 }
 
-export async function obtenerEstudiantePorIdService(id) {
+export async function obtenerEstudiantePorIdentificacionService(identificacion) {
   try {
-    return await EstudianteRepository.obtenerPorId(id);
+    return await EstudianteRepository.obtenerPorIdentificacion(identificacion);
   } catch (error) {
     throw new Error('Error obteniendo estudiante: ' + error.message);
   }

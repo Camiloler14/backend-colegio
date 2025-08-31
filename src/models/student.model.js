@@ -3,7 +3,7 @@ import sequelize from '../config/db.js';
 
 // modelo estudiante
 const Estudiante = sequelize.define('Estudiante', {
-  identificacion: { type: DataTypes.STRING, allowNull: false, unique: true },
+  identificacion: { type: DataTypes.INTEGER, allowNull: false, unique: true },
   primerNombre: { type: DataTypes.STRING, allowNull: false },
   segundoNombre: { type: DataTypes.STRING, allowNull: true },
   primerApellido: { type: DataTypes.STRING, allowNull: false },
@@ -20,8 +20,8 @@ const Estudiante = sequelize.define('Estudiante', {
   ciudad: { type: DataTypes.STRING, allowNull: false },
   fechaMatricula: { type: DataTypes.DATEONLY, allowNull: false },
   fechaIngreso: { type: DataTypes.DATEONLY, allowNull: false },
-  antiguedad: { type: DataTypes.INTEGER, allowNull: false },
-  grado: { type: DataTypes.STRING, allowNull: false },
+  antiguedad: { type: DataTypes.DATEONLY, allowNull: false },
+  grado: { type: DataTypes.INTEGER, allowNull: false },
   estado: { type: DataTypes.STRING, allowNull: false },
   observaciones: { type: DataTypes.TEXT, allowNull: true },
 }, {

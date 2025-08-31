@@ -20,12 +20,12 @@ const Materia = sequelize.define('Materia', {
     allowNull: false,
     unique: true,
   },
-  docenteId: {
+  docenteDocumento: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
       model: 'docentes',
-      key: 'id',
+      key: 'documento',
     },
     onUpdate: 'CASCADE',
     onDelete: 'RESTRICT',

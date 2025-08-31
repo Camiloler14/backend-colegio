@@ -30,47 +30,51 @@ const router = express.Router();
  *         - documento
  *         - fecha_ingreso
  *       properties:
- *         id:
- *           type: integer
- *           description: El ID del docente
  *         primerNombre:
  *           type: string
+ *           example: Juan
  *           description: El primer nombre del docente
  *         segundoNombre:
  *           type: string
- *           description: El segundo nombre del docente
+ *           example: Carlos
+ *           description: El segundo nombre del docente (opcional)
  *         primerApellido:
  *           type: string
+ *           example: Pérez
  *           description: El primer apellido del docente
  *         segundoApellido:
  *           type: string
+ *           example: Gómez
  *           description: El segundo apellido del docente
  *         email:
  *           type: string
- *           description: El email del docente
+ *           example: juan.perez@example.com
+ *           description: Correo electrónico del docente
  *         telefono:
  *           type: string
- *           description: El teléfono del docente
+ *           example: "3124567890"
+ *           description: Número de teléfono del docente
  *         direccion:
  *           type: string
- *           description: La dirección del docente
+ *           example: Calle 123 #45-67
+ *           description: Dirección de residencia
  *         fecha_ingreso:
  *           type: string
  *           format: date
- *           description: La fecha de ingreso del docente
+ *           example: "2023-08-15"
+ *           description: Fecha de ingreso al colegio
  *         documento:
- *           type: string
- *           description: El documento de identidad del docente
+ *           type: integer
+ *           example: 1020304050
+ *           description: Número de documento del docente
  */
 
 /**
  * @swagger
  * /api/teachers:
  *   post:
- *     tags:
- *       - Docentes
+ *     tags: [Docentes]
  *     summary: Crear un nuevo docente
- *     description: Crea un nuevo docente en la base de datos.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -89,7 +93,7 @@ const router = express.Router();
  *       400:
  *         description: Datos faltantes o incorrectos
  *       500:
- *         description: Error al crear el docente
+ *         description: Error interno
  */
 router.post('/teachers', verificarToken, crearDocente);
 
@@ -97,10 +101,8 @@ router.post('/teachers', verificarToken, crearDocente);
  * @swagger
  * /api/teachers:
  *   get:
- *     tags:
- *       - Docentes
+ *     tags: [Docentes]
  *     summary: Obtener todos los docentes
- *     description: Obtiene una lista de todos los docentes registrados.
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -121,19 +123,17 @@ router.get('/teachers', verificarToken, obtenerDocentes);
  * @swagger
  * /api/teachers/{documento}:
  *   get:
- *     tags:
- *       - Docentes
+ *     tags: [Docentes]
  *     summary: Obtener docente por documento
- *     description: Obtiene un docente a través de su número de documento de identidad.
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: documento
  *         required: true
- *         description: El número de documento del docente.
  *         schema:
- *           type: string
+ *           type: integer
+ *         description: Número de documento del docente
  *     responses:
  *       200:
  *         description: Docente encontrado
@@ -152,19 +152,17 @@ router.get('/teachers/:documento', verificarToken, obtenerDocente);
  * @swagger
  * /api/teachers/{documento}:
  *   put:
- *     tags:
- *       - Docentes
- *     summary: Actualizar docente
- *     description: Actualiza los datos de un docente existente.
+ *     tags: [Docentes]
+ *     summary: Actualizar docente por documento
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: documento
  *         required: true
- *         description: El número de documento del docente.
  *         schema:
- *           type: string
+ *           type: integer
+ *         description: Número de documento del docente
  *     requestBody:
  *       required: true
  *       content:
@@ -178,8 +176,6 @@ router.get('/teachers/:documento', verificarToken, obtenerDocente);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Docente'
- *       400:
- *         description: Datos faltantes o incorrectos
  *       404:
  *         description: Docente no encontrado
  *       500:
@@ -191,22 +187,20 @@ router.put('/teachers/:documento', verificarToken, actualizarDocente);
  * @swagger
  * /api/teachers/{documento}:
  *   delete:
- *     tags:
- *       - Docentes
- *     summary: Eliminar docente
- *     description: Elimina un docente de la base de datos por su documento de identidad.
+ *     tags: [Docentes]
+ *     summary: Eliminar docente por documento
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: documento
  *         required: true
- *         description: El número de documento del docente.
  *         schema:
- *           type: string
+ *           type: integer
+ *         description: Número de documento del docente
  *     responses:
  *       200:
- *         description: Docente eliminado
+ *         description: Docente eliminado correctamente
  *       404:
  *         description: Docente no encontrado
  *       500:

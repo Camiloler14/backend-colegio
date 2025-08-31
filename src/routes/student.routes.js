@@ -24,11 +24,8 @@ const router = express.Router();
  *     Estudiante:
  *       type: object
  *       properties:
- *         id:
- *           type: integer
- *           description: ID del estudiante
  *         identificacion:
- *           type: string
+ *           type: integer
  *         primerNombre:
  *           type: string
  *         segundoNombre:
@@ -69,9 +66,10 @@ const router = express.Router();
  *           type: string
  *           format: date
  *         antiguedad:
- *           type: integer
- *         grado:
  *           type: string
+ *           format: date
+ *         grado:
+ *           type: integer
  *         estado:
  *           type: string
  *         observaciones:
@@ -128,7 +126,7 @@ router.post('/students', verificarToken, crearEstudiante);
 
 /**
  * @swagger
- * /students/{id}:
+ * /students/{identificacion}:
  *   put:
  *     summary: Actualizar un estudiante existente
  *     tags:
@@ -136,9 +134,9 @@ router.post('/students', verificarToken, crearEstudiante);
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - name: id
+ *       - name: identificacion
  *         in: path
- *         description: ID del estudiante a actualizar
+ *         description: Identificacion del estudiante a actualizar
  *         required: true
  *         schema:
  *           type: integer
@@ -161,21 +159,21 @@ router.post('/students', verificarToken, crearEstudiante);
  *       500:
  *         description: Error interno del servidor
  */
-router.put('/students/:id', verificarToken, actualizarEstudiante);
+router.put('/students/:identificacion', verificarToken, actualizarEstudiante);
 
 /**
  * @swagger
- * /students/{id}:
+ * /students/{identificacion}:
  *   delete:
- *     summary: Eliminar un estudiante por ID
+ *     summary: Eliminar un estudiante por identifiacion
  *     tags:
  *       - Estudiantes
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - name: id
+ *       - name: identificacion
  *         in: path
- *         description: ID del estudiante a eliminar
+ *         description: Identificacion del estudiante a eliminar
  *         required: true
  *         schema:
  *           type: integer
@@ -194,7 +192,7 @@ router.put('/students/:id', verificarToken, actualizarEstudiante);
  *       500:
  *         description: Error interno del servidor
  */
-router.delete('/students/:id', verificarToken, eliminarEstudiante);
+router.delete('/students/:identificacion', verificarToken, eliminarEstudiante);
 
 /**
  * @swagger
@@ -221,17 +219,17 @@ router.get('/students', verificarToken, obtenerEstudiantes);
 
 /**
  * @swagger
- * /students/{id}:
+ * /students/{identificacion}:
  *   get:
- *     summary: Obtener un estudiante por ID
+ *     summary: Obtener un estudiante por identificacion
  *     tags:
  *       - Estudiantes
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - name: id
+ *       - name: identificacion
  *         in: path
- *         description: ID del estudiante
+ *         description: Identificacion del estudiante
  *         required: true
  *         schema:
  *           type: integer
@@ -247,6 +245,6 @@ router.get('/students', verificarToken, obtenerEstudiantes);
  *       500:
  *         description: Error interno del servidor
  */
-router.get('/students/:id', verificarToken, obtenerEstudiante);
+router.get('/students/:identificacion', verificarToken, obtenerEstudiante);
 
 export default router;

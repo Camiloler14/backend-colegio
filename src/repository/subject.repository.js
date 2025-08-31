@@ -1,4 +1,5 @@
 import Materia from '../models/subject.model.js';
+import sequelize from '../config/db.js';  // Importa la instancia de Sequelize
 
 export async function findAllSubjects() {
   return await Materia.findAll();
@@ -19,3 +20,13 @@ export async function updateSubject(subject, data) {
 export async function deleteSubject(subject) {
   return await subject.destroy();
 }
+
+export async function findSubjectByCodigo(codigo) {
+  return await Materia.findOne({
+    where: sequelize.where(
+      sequelize.fn('LOWER', sequelize.col('codigo')),
+      codigo.toLowerCase()
+    )
+  });
+}
+

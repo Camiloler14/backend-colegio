@@ -12,18 +12,22 @@ export async function createSubject(data) {
   return await subjectRepository.createSubject(data);
 }
 
-export async function updateSubject(id, data) {
-  const subject = await subjectRepository.findSubjectById(id);
+export async function updateSubjectByCodigo(codigo, data) {
+  const subject = await subjectRepository.findSubjectByCodigo(codigo); // busca por código
   if (!subject) {
-    throw new Error('Materia no encontrada');
+    return null;  // o lanza error, según cómo manejes
   }
   return await subjectRepository.updateSubject(subject, data);
 }
 
-export async function deleteSubject(id) {
-  const subject = await subjectRepository.findSubjectById(id);
+export async function deleteSubjectByCodigo(codigo) {
+  const subject = await subjectRepository.findSubjectByCodigo(codigo);
   if (!subject) {
-    throw new Error('Materia no encontrada');
+    return null; 
   }
   return await subjectRepository.deleteSubject(subject);
+}
+
+export async function getSubjectByCodigo(codigo) {
+  return await subjectRepository.findSubjectByCodigo(codigo);
 }
