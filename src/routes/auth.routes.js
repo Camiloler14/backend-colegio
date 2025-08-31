@@ -36,7 +36,7 @@ const router = express.Router();
  *               contraseña:
  *                 type: string
  *                 description: La contraseña del administrador
- *                 example: password123
+ *                 example: admin123
  *     responses:
  *       200:
  *         description: Login exitoso y token JWT generado

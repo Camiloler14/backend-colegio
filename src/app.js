@@ -8,7 +8,7 @@ import subjectRoutes from './routes/subject.routes.js';
 import { swaggerDocs } from './docs/swagger.js';
 
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 // Crear la aplicación de Express
 const app = express();

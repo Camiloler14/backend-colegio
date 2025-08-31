@@ -25,7 +25,7 @@ Materia.belongsTo(Docente, {
 
     const [admin, creado] = await Admin.findOrCreate({
       where: { usuario: 'admin' },
-      defaults: { contraseña: 'admin123' } // texto plano
+      defaults: { contraseña: 'admin123' } 
     });
 
     console.log(creado ? 'Admin creado' : 'Admin ya existía');
