@@ -1,26 +1,22 @@
-name: Build
+name: Build and Analyze
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - development
 
 jobs:
   sonarqube:
-    name: SonarQube
-    runs-on: windows-latest  # Cambia a ubuntu-latest si prefieres Linux
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Clonación completa para mejor análisis
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'  # Cambia si usas otra versión
+          node-version: '18'
 
       - name: Install dependencies
         run: npm ci
@@ -28,7 +24,11 @@ jobs:
       - name: Run tests
         run: npm test -- --coverage
 
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectKey: Camiloler14_backend-colegio
+          organization: open-system
+          projectBaseDir: .
