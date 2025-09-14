@@ -29,6 +29,14 @@ jobs:
       - name: Clonar repositorio
         uses: actions/checkout@v3
 
+      - name: Esperar a que Postgres esté listo
+        run: |
+          for i in {1..10}; do
+            pg_isready -h localhost -p 5432 && break
+            echo "Esperando por Postgres... ($i)"
+            sleep 1
+          done
+
       - name: Configurar Node.js
         uses: actions/setup-node@v3
         with:
@@ -45,5 +53,11 @@ jobs:
           echo "DB_PASSWORD=postgres" >> .env
           echo "DB_NAME=test_db" >> .env
 
-      - name: Ejecutar pruebas
-        run: npm test
+      - name: Ejecutar pruebas con cobertura
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: test_db
+        run: npm test -- --coverage
