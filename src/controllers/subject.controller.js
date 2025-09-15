@@ -6,7 +6,7 @@ export const getAllSubjects = async (req, res) => {
     const materias = await subjectService.getAllSubjects();
     res.json(materias);
   } catch (error) {
-    console.error(error);
+    console.error("Error al obtener las materias:", error.name, error.message);
     res.status(500).json({ message: 'Error al obtener las materias' });
   }
 };
@@ -21,7 +21,7 @@ export const getSubjectByCodigo = async (req, res) => {
     }
     res.json(materia);
   } catch (error) {
-    console.error(error);
+    console.error("Error al obtener la materia:", error.name, error.message);
     res.status(500).json({ message: 'Error al obtener la materia' });
   }
 };
@@ -32,7 +32,7 @@ export const createSubject = async (req, res) => {
     const nuevaMateria = await subjectService.createSubject(req.body);
     res.status(201).json(nuevaMateria);
   } catch (error) {
-    console.error(error);
+    console.error("Error al crear la materia:", error.name, error.message);
 
     if (error.name === 'SequelizeValidationError') {
       const mensajes = error.errors.map(e => e.message);
@@ -47,7 +47,6 @@ export const createSubject = async (req, res) => {
       return res.status(400).json({ message: 'El docenteDocumento especificado no existe.' });
     }
 
-    // Error genérico
     res.status(500).json({ message: 'Error al crear la materia' });
   }
 };
@@ -62,7 +61,7 @@ export const updateSubjectByCodigo = async (req, res) => {
     }
     res.json(materiaActualizada);
   } catch (error) {
-    console.error(error);
+    console.error("Error al actualizar la materia:", error.name, error.message);
 
     if (error.name === 'SequelizeForeignKeyConstraintError') {
       return res.status(400).json({ message: 'El docenteDocumento especificado no existe.' });
@@ -82,7 +81,7 @@ export const deleteSubjectByCodigo = async (req, res) => {
     }
     res.json({ message: 'Materia eliminada correctamente' });
   } catch (error) {
-    console.error(error);
+    console.error("Error al eliminar la materia:", error.name, error.message);
 
     if (error.name === 'SequelizeForeignKeyConstraintError') {
       return res.status(400).json({ message: 'No se puede eliminar la materia porque está relacionada con otros registros.' });
@@ -91,4 +90,3 @@ export const deleteSubjectByCodigo = async (req, res) => {
     res.status(500).json({ message: 'Error al eliminar la materia' });
   }
 };
-
