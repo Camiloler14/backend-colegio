@@ -6,8 +6,6 @@ import {
   deleteSubject,
   findSubjectByCodigo
 } from '../repository/subject.repository.js';  // Ajusta la ruta a tu repositorio
-import sequelize from '../config/db.js';  // Ajusta según la configuración de Sequelize
-import SequelizeMock from 'sequelize-mock';
 
 jest.mock('../models/subject.model.js', () => {
   // Aquí definimos SequelizeMock dentro del mock para evitar el error
