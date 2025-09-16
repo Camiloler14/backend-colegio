@@ -64,6 +64,9 @@ jobs:
           DB_NAME: test_db
         run: npm test -- --coverage
 
+      - name: List coverage folder contents
+        run: ls -l coverage
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
@@ -72,3 +75,4 @@ jobs:
           projectKey: Camiloler14_backend-colegio
           organization: open-system
           projectBaseDir: .
+          extraArgs: '-Dsonar.javascript.lcov.reportPaths=coverage/lcov.info'
