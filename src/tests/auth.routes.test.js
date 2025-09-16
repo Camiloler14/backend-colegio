@@ -20,8 +20,6 @@ describe('Rutas de Autenticación (/api/auth)', () => {
     if (sequelize?.close) await sequelize.close();
   });
 
-  let token;
-
   it('POST /api/auth/register - debe registrar un nuevo admin', async () => {
     const res = await request(app).post('/api/auth/register').send({
       usuario: usuarioTest,
@@ -40,7 +38,7 @@ describe('Rutas de Autenticación (/api/auth)', () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.body.token).toBeDefined();
-    token = res.body.token;
+    // No asignamos token porque no se usa luego
   });
 
   it('GET /api/auth/admin/:usuario - debe retornar el admin', async () => {
