@@ -9,6 +9,10 @@ module.exports = {
     "src/controllers/**/*.js",
     "src/services/**/*.js",
     "src/repository/**/*.js",
+    "src/routes/**/*.js",
+    "src/config/**/*.js",
+    "src/docs/**/*.js",
+    "src/middlewares/**/*.js",
     "!src/tests/**", // Excluir tests de la cobertura
   ],
   coverageReporters: ["lcov", "text"],
