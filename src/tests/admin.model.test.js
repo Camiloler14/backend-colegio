@@ -26,9 +26,15 @@ describe('Tests para el modelo Admin', () => {
     const isHashed = admin.contraseña.startsWith('$2b$');
     expect(isHashed).toBe(true);
 
-    // Verificar que el hash corresponde a la contraseña original
     const validPassword = await bcrypt.compare(adminData.contraseña, admin.contraseña);
     expect(validPassword).toBe(true);
+  });
+
+  test('No debería hashear si la contraseña ya está hasheada al crear', async () => {
+    const hashed = await bcrypt.hash('password123', 10);
+    const admin = await Admin.create({ usuario: 'admin2', contraseña: hashed });
+
+    expect(admin.contraseña).toBe(hashed);
   });
 
   test('No debería permitir crear dos admins con el mismo usuario', async () => {
@@ -39,11 +45,10 @@ describe('Tests para el modelo Admin', () => {
 
     await Admin.create(adminData);
 
-    // Intentamos crear otro admin con mismo usuario, debería fallar
     await expect(Admin.create(adminData)).rejects.toThrow();
   });
 
-  test('Debería hashear la contraseña si se actualiza', async () => {
+  test('Debería hashear la contraseña si se actualiza y no está hasheada', async () => {
     const admin = await Admin.create({
       usuario: 'adminUpdate',
       contraseña: 'oldPassword',
@@ -51,7 +56,6 @@ describe('Tests para el modelo Admin', () => {
 
     const oldHash = admin.contraseña;
 
-    // Actualizamos la contraseña sin hashear
     admin.contraseña = 'newPassword';
     await admin.save();
 
@@ -61,5 +65,27 @@ describe('Tests para el modelo Admin', () => {
 
     const validPassword = await bcrypt.compare('newPassword', admin.contraseña);
     expect(validPassword).toBe(true);
+  });
+
+  test('No debería hashear si la contraseña ya está hasheada al actualizar', async () => {
+    const hashed = await bcrypt.hash('password456', 10);
+    const admin = await Admin.create({ usuario: 'admin3', contraseña: hashed });
+
+    admin.contraseña = hashed;  // Asignamos la misma contraseña hasheada
+    await admin.save();
+
+    expect(admin.contraseña).toBe(hashed);
+  });
+
+  test('No debería hashear si la contraseña no cambió al actualizar', async () => {
+    const admin = await Admin.create({
+      usuario: 'adminNoChange',
+      contraseña: 'passwordNoChange',
+    });
+
+    const oldPassword = admin.contraseña;
+    await admin.save();  // Guardamos sin cambiar la contraseña
+
+    expect(admin.contraseña).toBe(oldPassword);
   });
 });

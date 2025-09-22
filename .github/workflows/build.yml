@@ -1,13 +1,12 @@
-name: Tests con conexión a Base de Datos
+name: Build and Analyze
 
 on:
-  push:
-    branches: [development]
   pull_request:
-    branches: [development]
+    branches:
+      - development
 
 jobs:
-  test-db-connection:
+  sonarqube:
     runs-on: ubuntu-latest
 
     services:
@@ -26,24 +25,24 @@ jobs:
           --health-retries 5
 
     steps:
-      - name: Clonar repositorio
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Esperar a que Postgres esté listo
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for Postgres to be ready
         run: |
           for i in {1..10}; do
             pg_isready -h localhost -p 5432 && break
             echo "Esperando por Postgres... ($i)"
             sleep 1
           done
-
-      - name: Configurar Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Instalar dependencias
-        run: npm install
 
       - name: Crear archivo .env para pruebas
         run: |
@@ -53,7 +52,10 @@ jobs:
           echo "DB_PASSWORD=postgres" >> .env
           echo "DB_NAME=test_db" >> .env
 
-      - name: Ejecutar pruebas con cobertura
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run tests with coverage
         env:
           DB_HOST: localhost
           DB_PORT: 5432
@@ -62,8 +64,15 @@ jobs:
           DB_NAME: test_db
         run: npm test -- --coverage
 
-      - name: Subir cobertura a Codecov
-        uses: codecov/codecov-action@v5
+      - name: List coverage folder contents
+        run: ls -l coverage
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          files: ./coverage/lcov.info
-          fail_ci_if_error: true
+          projectKey: Camiloler14_backend-colegio
+          organization: open-system
+          projectBaseDir: .
+          extraArgs: '-Dsonar.javascript.lcov.reportPaths=coverage/lcov.info'

@@ -1,3 +1,4 @@
+// Importación de servicios relacionados con el manejo de estudiantes
 import {
   crearEstudianteService,
   obtenerEstudiantesService,
@@ -6,6 +7,11 @@ import {
   eliminarEstudianteService
 } from '../services/student.service.js';
 
+/**
+ * Controlador para crear un nuevo estudiante.
+ * Valida que los campos requeridos estén presentes y tengan el tipo correcto.
+ * En caso exitoso, devuelve el estudiante creado con código 201.
+ */
 export async function crearEstudiante(req, res) {
   const {
     identificacion,
@@ -28,6 +34,7 @@ export async function crearEstudiante(req, res) {
 
   console.log('Datos recibidos:', req.body);
 
+  // Validación de campos obligatorios y tipos
   if (
     typeof identificacion !== 'number' ||
     !primerNombre ||
@@ -50,6 +57,7 @@ export async function crearEstudiante(req, res) {
   }
 
   try {
+    // Llama al servicio para crear el estudiante
     const estudiante = await crearEstudianteService(req.body);
     return res.status(201).json(estudiante);
   } catch (error) {
@@ -58,6 +66,10 @@ export async function crearEstudiante(req, res) {
   }
 }
 
+/**
+ * Controlador para obtener la lista de todos los estudiantes.
+ * Devuelve un arreglo con todos los registros.
+ */
 export async function obtenerEstudiantes(req, res) {
   try {
     const estudiantes = await obtenerEstudiantesService();
@@ -68,10 +80,15 @@ export async function obtenerEstudiantes(req, res) {
   }
 }
 
+/**
+ * Controlador para obtener un estudiante por su número de identificación.
+ * Si no se encuentra, devuelve un estado 404.
+ */
 export async function obtenerEstudiante(req, res) {
   const { identificacion } = req.params;
 
   try {
+    // Busca el estudiante por su identificación (convertida a número)
     const estudiante = await obtenerEstudiantePorIdentificacionService(parseInt(identificacion));
     if (!estudiante) {
       return res.status(404).json({ mensaje: 'Estudiante no encontrado' });
@@ -83,11 +100,16 @@ export async function obtenerEstudiante(req, res) {
   }
 }
 
+/**
+ * Controlador para actualizar los datos de un estudiante por su identificación.
+ * Si el estudiante no existe, responde con estado 404.
+ */
 export async function actualizarEstudiante(req, res) {
   const { identificacion } = req.params;
   const datos = req.body;
 
   try {
+    // Llama al servicio para actualizar el estudiante
     const estudianteActualizado = await actualizarEstudianteService(parseInt(identificacion), datos);
     if (!estudianteActualizado) {
       return res.status(404).json({ mensaje: 'Estudiante no encontrado' });
@@ -99,10 +121,15 @@ export async function actualizarEstudiante(req, res) {
   }
 }
 
+/**
+ * Controlador para eliminar un estudiante por su identificación.
+ * Si el estudiante no existe, responde con estado 404.
+ */
 export async function eliminarEstudiante(req, res) {
   const { identificacion } = req.params;
 
   try {
+    // Llama al servicio para eliminar el estudiante
     const eliminado = await eliminarEstudianteService(parseInt(identificacion));
     if (!eliminado) {
       return res.status(404).json({ mensaje: 'Estudiante no encontrado' });

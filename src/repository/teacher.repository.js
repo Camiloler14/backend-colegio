@@ -28,3 +28,5 @@ export class DocenteRepository {
   }
 }
 
+// Aquí exportas la instancia de la clase.
+export default new DocenteRepository();

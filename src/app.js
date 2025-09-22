@@ -25,12 +25,4 @@ app.use('/api', subjectRoutes);
 // Configuración de Swagger para la documentación de la API
 swaggerDocs(app);
 
-// Definir el puerto
-const PORT = process.env.PORT || 3000;
-
-// Arrancar el servidor
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
-});
-
 export default app;
