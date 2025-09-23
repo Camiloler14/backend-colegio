@@ -5,9 +5,10 @@
   "description": "Backend colegio",
   "main": "index.js",
   "scripts": {
-    "test": "jest --coverage --coverageReporters=lcov",
-    "lint": "eslint . --ext .js,.jsx"
-  },
+  "start": "node src/server.js",
+  "test": "jest --coverage --coverageReporters=lcov",
+  "lint": "eslint . --ext .js,.jsx"
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Camiloler14/backend-colegio.git"
