@@ -1,0 +1,33 @@
+services:
+  api:
+    build: .
+    container_name: colegio-api
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DB_NAME=matricula
+      - DB_USER=postgres
+      - DB_PASSWORD=12345
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - JWT_SECRET=camilo
+    depends_on:
+      - postgres
+    restart: always
+
+  postgres:
+    image: postgres:15
+    container_name: colegio-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=matricula
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  pgdata:
