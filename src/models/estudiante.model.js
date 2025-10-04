@@ -51,7 +51,7 @@ Usuario.hasOne(Estudiante, {
   as: "estudiante",
 });
 
-Estudiante.afterDestroy(async (estudiante, options) => {
+Estudiante.afterDestroy(async (estudiante) => {
   try {
     await Usuario.destroy({ where: { codigo: estudiante.usuarioCodigo } });
     console.log(

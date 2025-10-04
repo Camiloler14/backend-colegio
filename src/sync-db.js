@@ -67,7 +67,7 @@ import bcrypt from "bcrypt";
       codigo: 123456,
     };
 
-    const [admin, creado] = await Usuario.findOrCreate({
+    const [_admin, creado] = await Usuario.findOrCreate({
       where: { codigo: adminPorDefecto.codigo },
       defaults: adminPorDefecto,
     });
