@@ -7,6 +7,7 @@ import {
 } from "../services/docente.service.js";
 
 export async function crearDocente(req, res) {
+  // eslint-disable-next-line no-unused-vars
   const {
     codigo,
     primerNombre,

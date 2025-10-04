@@ -34,6 +34,7 @@ const Docente = sequelize.define(
   }
 );
 
+// Relaciones
 Docente.belongsTo(Usuario, {
   foreignKey: "codigo",
   targetKey: "codigo",
@@ -45,7 +46,8 @@ Usuario.hasOne(Docente, {
   sourceKey: "codigo",
 });
 
-Docente.afterCreate(async (docente, options) => {
+// Hooks
+Docente.afterCreate(async (docente) => {
   try {
     const contraseñaEncriptada = await bcrypt.hash("docente123", 10);
 
@@ -64,7 +66,7 @@ Docente.afterCreate(async (docente, options) => {
   }
 });
 
-Docente.afterDestroy(async (docente, options) => {
+Docente.afterDestroy(async (docente) => {
   try {
     await Usuario.destroy({ where: { codigo: docente.codigo } });
     console.log(
