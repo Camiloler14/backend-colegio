@@ -9,19 +9,19 @@ import {
 export async function crearDocente(req, res) {
   // eslint-disable-next-line no-unused-vars
   const {
-    codigo,
-    primerNombre,
-    segundoNombre,
-    primerApellido,
-    segundoApellido,
-    email,
-    telefono,
-    direccion,
-    barrio,
-    ciudad,
-    fechaIngreso,
-    documento,
-  } = req.body;
+  codigo,
+  primerNombre,
+  segundoNombre: _segundoNombre,
+  primerApellido,
+  segundoApellido: _segundoApellido,
+  email,
+  telefono,
+  direccion,
+  barrio,
+  ciudad,
+  fechaIngreso,
+  documento,
+} = req.body;
 
   if (
     !codigo ||
