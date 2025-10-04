@@ -1,28 +1,29 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import authRoutes from './routes/auth.routes.js';
-import studentRoutes from './routes/student.routes.js';
-import teacherRoutes from './routes/teacher.routes.js';
-import subjectRoutes from './routes/subject.routes.js'; 
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
 
-import { swaggerDocs } from './docs/swagger.js';
+import usuarioRoutes from "./routes/usuario.route.js";
+import estudianteRoutes from "./routes/estudiante.route.js";
+import docenteRoutes from "./routes/docente.route.js";
+import materiaRoutes from "./routes/materia.route.js";
+import estudianteMateriaRoutes from "./routes/estudianteMateria.routes.js";
 
+import { swaggerDocs } from "./docs/swagger.js";
 
 dotenv.config({ quiet: true });
 
-// Crear la aplicación de Express
 const app = express();
 
-// Middleware para parsear el cuerpo de las solicitudes como JSON
+app.use(cors());
+
 app.use(express.json());
 
-// Rutas de la API
-app.use('/api/auth', authRoutes);
-app.use('/api', studentRoutes);
-app.use('/api', teacherRoutes);
-app.use('/api', subjectRoutes); 
+app.use("/api/usuario", usuarioRoutes);
+app.use("/api/estudiante", estudianteRoutes);
+app.use("/api/docente", docenteRoutes);
+app.use("/api/materia", materiaRoutes);
+app.use("/api/inscripciones", estudianteMateriaRoutes);
 
-// Configuración de Swagger para la documentación de la API
 swaggerDocs(app);
 
 export default app;
