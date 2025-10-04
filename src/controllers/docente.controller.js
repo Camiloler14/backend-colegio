@@ -7,13 +7,13 @@ import {
 } from "../services/docente.service.js";
 
 export async function crearDocente(req, res) {
-  // eslint-disable-next-line no-unused-vars
+  /* eslint-disable no-unused-vars */ 
   const {
   codigo,
   primerNombre,
-  segundoNombre: _segundoNombre,
+  segundoNombre,
   primerApellido,
-  segundoApellido: _segundoApellido,
+ segundoApellido,
   email,
   telefono,
   direccion,
@@ -22,6 +22,7 @@ export async function crearDocente(req, res) {
   fechaIngreso,
   documento,
 } = req.body;
+/* eslint-enable no-unused-vars */
 
   if (
     !codigo ||
