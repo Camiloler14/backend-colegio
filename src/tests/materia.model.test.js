@@ -3,7 +3,7 @@ import Docente from "../models/docente.model.js";
 
 describe("Modelo Materia", () => {
   test("debe tener los campos correctos", () => {
-    const attributes = Materia.getAttributes();
+    const attributes = Materia.rawAttributes;
 
     expect(attributes).toHaveProperty("codigoMateria");
     expect(attributes).toHaveProperty("nombreMateria");
