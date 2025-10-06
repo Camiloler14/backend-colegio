@@ -6,7 +6,7 @@ import usuarioRoutes from "./routes/usuario.route.js";
 import estudianteRoutes from "./routes/estudiante.route.js";
 import docenteRoutes from "./routes/docente.route.js";
 import materiaRoutes from "./routes/materia.route.js";
-import estudianteMateriaRoutes from "./routes/estudianteMateria.routes.js";
+import estudianteMateriaRoutes from "./routes/estudianteMateria.route.js";
 
 import { swaggerDocs } from "./docs/swagger.js";
 

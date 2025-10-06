@@ -7,22 +7,20 @@ import {
 } from "../services/docente.service.js";
 
 export async function crearDocente(req, res) {
-  /* eslint-disable no-unused-vars */ 
   const {
-  codigo,
-  primerNombre,
-  segundoNombre,
-  primerApellido,
- segundoApellido,
-  email,
-  telefono,
-  direccion,
-  barrio,
-  ciudad,
-  fechaIngreso,
-  documento,
-} = req.body;
-/* eslint-enable no-unused-vars */
+    codigo,
+    primerNombre,
+    segundoNombre,
+    primerApellido,
+    segundoApellido,
+    email,
+    telefono,
+    direccion,
+    barrio,
+    ciudad,
+    fechaIngreso,
+    documento,
+  } = req.body;
 
   if (
     !codigo ||
@@ -44,7 +42,22 @@ export async function crearDocente(req, res) {
     if (!result.success) {
       return res.status(400).json({ mensaje: result.message });
     }
-    return res.status(201).json(result.data);
+
+    const docente = result.data.toJSON();
+
+    const nombres = [docente.primerNombre, docente.segundoNombre]
+      .filter(Boolean)
+      .join(" ");
+    const apellidos = [docente.primerApellido, docente.segundoApellido]
+      .filter(Boolean)
+      .join(" ");
+
+    const docenteConNombre = {
+      ...docente,
+      nombreCompleto: `${nombres} ${apellidos}`.replace(/\s+/g, " ").trim(),
+    };
+
+    return res.status(201).json(docenteConNombre);
   } catch (error) {
     console.error("Error al crear docente:", error);
     return res.status(500).json({ mensaje: "Error interno del servidor" });
@@ -58,23 +71,29 @@ export async function obtenerDocentes(req, res) {
       return res.status(400).json({ mensaje: result.message });
     }
 
-    const docentesConNombre = result.data.map((doc) => {
-      const nombres = [doc.primerNombre, doc.segundoNombre]
+    const docentes = result.data.map((doc) => {
+      const d =
+        typeof doc.toJSON === "function" ? doc.toJSON() : doc.dataValues || doc;
+      const nombres = [d.primerNombre, d.segundoNombre]
         .filter(Boolean)
         .join(" ");
-      const apellidos = [doc.primerApellido, doc.segundoApellido]
+      const apellidos = [d.primerApellido, d.segundoApellido]
         .filter(Boolean)
         .join(" ");
+
       return {
-        ...doc,
-        nombreCompleto: `${nombres} ${apellidos}`.trim(),
+        ...d,
+        nombreCompleto: `${nombres} ${apellidos}`.replace(/\s+/g, " ").trim(),
       };
     });
 
-    return res.json(docentesConNombre);
+    return res.json(docentes);
   } catch (error) {
     console.error("Error al obtener docentes:", error);
-    return res.status(500).json({ mensaje: "Error interno del servidor" });
+    return res.status(500).json({
+      mensaje: "Error interno del servidor",
+      error: error.message,
+    });
   }
 }
 
@@ -90,9 +109,16 @@ export async function obtenerDocente(req, res) {
     const docente = result.data;
     const docenteConNombre = {
       ...docente.dataValues,
-      nombreCompleto: `${docente.primerNombre} ${docente.segundoNombre ?? ""} ${
-        docente.primerApellido
-      } ${docente.segundoApellido ?? ""}`.trim(),
+      nombreCompleto: [
+        docente.primerNombre,
+        docente.segundoNombre,
+        docente.primerApellido,
+        docente.segundoApellido,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim(),
     };
 
     return res.json(docenteConNombre);

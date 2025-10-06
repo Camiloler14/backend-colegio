@@ -1,15 +1,12 @@
 import request from "supertest";
 import express from "express";
-import * as docenteController from "../controllers/docente.controller.js";
-
-// Mock del servicio
-jest.mock("../services/docente.service.js", () => ({
-  crearDocenteServicio: jest.fn(),
-  obtenerDocentesServicio: jest.fn(),
-  obtenerDocentePorDocumentoServicio: jest.fn(),
-  actualizarDocenteServicio: jest.fn(),
-  eliminarDocenteServicio: jest.fn(),
-}));
+import {
+  crearDocente,
+  obtenerDocentes,
+  obtenerDocente,
+  actualizarDocente,
+  eliminarDocente,
+} from "../controllers/docente.controller.js";
 
 import {
   crearDocenteServicio,
@@ -19,97 +16,224 @@ import {
   eliminarDocenteServicio,
 } from "../services/docente.service.js";
 
-// Configurar Express para testing
+jest.mock("../services/docente.service.js");
+
 const app = express();
 app.use(express.json());
-app.post("/docentes", docenteController.crearDocente);
-app.get("/docentes", docenteController.obtenerDocentes);
-app.get("/docentes/:documento", docenteController.obtenerDocente);
-app.put("/docentes/:documento", docenteController.actualizarDocente);
-app.delete("/docentes/:documento", docenteController.eliminarDocente);
 
-describe("Docente Controller", () => {
+app.post("/docentes", crearDocente);
+app.get("/docentes", obtenerDocentes);
+app.get("/docentes/:documento", obtenerDocente);
+app.put("/docentes/:documento", actualizarDocente);
+app.delete("/docentes/:documento", eliminarDocente);
+
+describe("Controlador de docentes", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  test("Crear docente - éxito", async () => {
-    crearDocenteServicio.mockResolvedValue({
-      success: true,
-      data: { id: 1, primerNombre: "Juan" },
-    });
-
-    const res = await request(app).post("/docentes").send({
-      codigo: "123",
+  describe("POST /docentes", () => {
+    const docenteData = {
+      codigo: "DOC001",
       primerNombre: "Juan",
-      primerApellido: "López",
-      email: "juan@mail.com",
-      telefono: "123456789",
-      direccion: "Calle 1",
-      barrio: "Centro",
+      segundoNombre: "Camilo",
+      primerApellido: "Lerma",
+      segundoApellido: "Balanta",
+      email: "juan@example.com",
+      telefono: "3101234567",
+      direccion: "Calle 123",
+      barrio: "La Gran Colombia",
       ciudad: "Cali",
-      fechaIngreso: "2025-01-01",
-      documento: "1001",
+      fechaIngreso: "2025-10-05",
+      documento: "123456789",
+    };
+
+    it("debe crear un docente exitosamente", async () => {
+      crearDocenteServicio.mockResolvedValue({
+        success: true,
+        data: { toJSON: () => docenteData },
+      });
+
+      const res = await request(app).post("/docentes").send(docenteData);
+
+      expect(res.status).toBe(201);
+      expect(res.body.nombreCompleto).toBe("Juan Camilo Lerma Balanta");
+      expect(crearDocenteServicio).toHaveBeenCalledWith(docenteData);
     });
 
-    expect(res.statusCode).toBe(201);
-    expect(res.body).toHaveProperty("id", 1);
+    it("debe devolver error 400 si faltan campos obligatorios", async () => {
+      const res = await request(app).post("/docentes").send({
+        primerNombre: "Juan",
+      });
+      expect(res.status).toBe(400);
+      expect(res.body.mensaje).toBe("Faltan campos obligatorios");
+    });
+
+    it("debe devolver error si el servicio falla", async () => {
+      crearDocenteServicio.mockResolvedValue({
+        success: false,
+        message: "Docente ya existe",
+      });
+
+      const res = await request(app).post("/docentes").send(docenteData);
+
+      expect(res.status).toBe(400);
+      expect(res.body.mensaje).toBe("Docente ya existe");
+    });
+
+    it("debe manejar errores internos del servidor", async () => {
+      crearDocenteServicio.mockRejectedValue(new Error("DB error"));
+      const res = await request(app).post("/docentes").send(docenteData);
+      expect(res.status).toBe(500);
+      expect(res.body.mensaje).toBe("Error interno del servidor");
+    });
   });
 
-  test("Obtener todos los docentes - éxito", async () => {
-    obtenerDocentesServicio.mockResolvedValue({
-      success: true,
-      data: [
-        {
+  describe("GET /docentes", () => {
+    it("debe retornar una lista de docentes con nombre completo", async () => {
+      obtenerDocentesServicio.mockResolvedValue({
+        success: true,
+        data: [
+          {
+            toJSON: () => ({
+              primerNombre: "María",
+              segundoNombre: "Lucía",
+              primerApellido: "Gómez",
+              segundoApellido: "Ríos",
+            }),
+          },
+        ],
+      });
+
+      const res = await request(app).get("/docentes");
+      expect(res.status).toBe(200);
+      expect(res.body[0].nombreCompleto).toBe("María Lucía Gómez Ríos");
+    });
+
+    it("debe devolver error 400 si el servicio falla", async () => {
+      obtenerDocentesServicio.mockResolvedValue({
+        success: false,
+        message: "Error al obtener docentes",
+      });
+
+      const res = await request(app).get("/docentes");
+      expect(res.status).toBe(400);
+      expect(res.body.mensaje).toBe("Error al obtener docentes");
+    });
+
+    it("debe manejar errores internos del servidor", async () => {
+      obtenerDocentesServicio.mockRejectedValue(new Error("DB error"));
+      const res = await request(app).get("/docentes");
+      expect(res.status).toBe(500);
+      expect(res.body.mensaje).toBe("Error interno del servidor");
+    });
+  });
+
+  describe("GET /docentes/:documento", () => {
+    it("debe retornar un docente por documento", async () => {
+      obtenerDocentePorDocumentoServicio.mockResolvedValue({
+        success: true,
+        data: {
           primerNombre: "Juan",
-          segundoNombre: "",
-          primerApellido: "López",
-          segundoApellido: "",
+          primerApellido: "Lerma",
+          dataValues: { primerNombre: "Juan", primerApellido: "Lerma" },
         },
-      ],
+      });
+
+      const res = await request(app).get("/docentes/123456789");
+      expect(res.status).toBe(200);
+      expect(res.body.nombreCompleto).toContain("Juan Lerma");
     });
 
-    const res = await request(app).get("/docentes");
+    it("debe retornar 404 si el docente no existe", async () => {
+      obtenerDocentePorDocumentoServicio.mockResolvedValue({
+        success: false,
+        message: "Docente no encontrado",
+      });
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body[0]).toHaveProperty("nombreCompleto", "Juan López");
+      const res = await request(app).get("/docentes/0000000");
+      expect(res.status).toBe(404);
+      expect(res.body.mensaje).toBe("Docente no encontrado");
+    });
+
+    it("debe manejar errores internos", async () => {
+      obtenerDocentePorDocumentoServicio.mockRejectedValue(
+        new Error("Error DB")
+      );
+      const res = await request(app).get("/docentes/123456789");
+      expect(res.status).toBe(500);
+      expect(res.body.mensaje).toBe("Error interno del servidor");
+    });
   });
 
-  test("Obtener docente por documento - no encontrado", async () => {
-    obtenerDocentePorDocumentoServicio.mockResolvedValue({
-      success: false,
-      message: "Docente no encontrado",
+  describe("PUT /docentes/:documento", () => {
+    it("debe actualizar un docente correctamente", async () => {
+      actualizarDocenteServicio.mockResolvedValue({
+        success: true,
+        data: { mensaje: "Docente actualizado" },
+      });
+
+      const res = await request(app)
+        .put("/docentes/123456789")
+        .send({ telefono: "3009999999" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.mensaje).toBe("Docente actualizado");
     });
 
-    const res = await request(app).get("/docentes/9999");
+    it("debe devolver 404 si el docente no se encuentra", async () => {
+      actualizarDocenteServicio.mockResolvedValue({
+        success: false,
+        message: "Docente no encontrado",
+      });
 
-    expect(res.statusCode).toBe(404);
-    expect(res.body).toHaveProperty("mensaje", "Docente no encontrado");
+      const res = await request(app)
+        .put("/docentes/0000000")
+        .send({ telefono: "3009999999" });
+
+      expect(res.status).toBe(404);
+      expect(res.body.mensaje).toBe("Docente no encontrado");
+    });
+
+    it("debe manejar errores internos", async () => {
+      actualizarDocenteServicio.mockRejectedValue(new Error("DB error"));
+      const res = await request(app)
+        .put("/docentes/123456789")
+        .send({ telefono: "3009999999" });
+
+      expect(res.status).toBe(500);
+      expect(res.body.mensaje).toBe("Error interno del servidor");
+    });
   });
 
-  test("Actualizar docente - éxito", async () => {
-    actualizarDocenteServicio.mockResolvedValue({
-      success: true,
-      data: { primerNombre: "Carlos" },
+  describe("DELETE /docentes/:documento", () => {
+    it("debe eliminar un docente correctamente", async () => {
+      eliminarDocenteServicio.mockResolvedValue({
+        success: true,
+        message: "Docente eliminado correctamente",
+      });
+
+      const res = await request(app).delete("/docentes/123456789");
+      expect(res.status).toBe(200);
+      expect(res.body.mensaje).toBe("Docente eliminado correctamente");
     });
 
-    const res = await request(app)
-      .put("/docentes/1001")
-      .send({ primerNombre: "Carlos" });
+    it("debe devolver 404 si no existe el docente", async () => {
+      eliminarDocenteServicio.mockResolvedValue({
+        success: false,
+        message: "Docente no encontrado",
+      });
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty("primerNombre", "Carlos");
-  });
-
-  test("Eliminar docente - éxito", async () => {
-    eliminarDocenteServicio.mockResolvedValue({
-      success: true,
-      message: "Docente eliminado",
+      const res = await request(app).delete("/docentes/0000000");
+      expect(res.status).toBe(404);
+      expect(res.body.mensaje).toBe("Docente no encontrado");
     });
 
-    const res = await request(app).delete("/docentes/1001");
-
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty("mensaje", "Docente eliminado");
+    it("debe manejar errores internos", async () => {
+      eliminarDocenteServicio.mockRejectedValue(new Error("DB error"));
+      const res = await request(app).delete("/docentes/123456789");
+      expect(res.status).toBe(500);
+      expect(res.body.mensaje).toBe("Error interno del servidor");
+    });
   });
 });

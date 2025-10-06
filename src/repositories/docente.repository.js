@@ -33,9 +33,27 @@ export class DocenteRepository {
   async obtenerDocentes() {
     try {
       const docentes = await Docente.findAll({
-        attributes: { exclude: ["id"] },
+        attributes: [
+          "codigo",
+          "primerNombre",
+          "segundoNombre",
+          "primerApellido",
+          "segundoApellido",
+          "documento",
+          "email",
+          "telefono",
+          "direccion",
+          "barrio",
+          "ciudad",
+          "fechaIngreso",
+          "nombreCompleto",
+        ],
+        order: [["primerApellido", "ASC"]],
       });
-      return { success: true, data: docentes };
+
+      const docentesJson = docentes.map((d) => d.toJSON());
+
+      return { success: true, data: docentesJson };
     } catch (error) {
       return {
         success: false,
