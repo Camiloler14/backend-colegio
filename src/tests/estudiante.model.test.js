@@ -4,7 +4,7 @@ import Estudiante from "../models/estudiante.model.js";
 
 describe("Modelo Estudiante", () => {
   beforeAll(async () => {
-    await sequelize.sync({ force: true }); // Reinicia las tablas
+    await sequelize.sync({ force: true }); 
   });
 
   afterAll(async () => {

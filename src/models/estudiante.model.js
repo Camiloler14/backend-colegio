@@ -11,7 +11,7 @@ const Estudiante = sequelize.define(
     primerApellido: { type: DataTypes.STRING, allowNull: false },
     segundoApellido: { type: DataTypes.STRING, allowNull: true },
     edad: { type: DataTypes.INTEGER, allowNull: false },
-    genero: { type: DataTypes.STRING, allowNull: false }, // obligatorio
+    genero: { type: DataTypes.STRING, allowNull: false }, 
     fechaNacimiento: { type: DataTypes.DATEONLY, allowNull: false },
     acudiente1: { type: DataTypes.STRING, allowNull: false },
     telefonoAcudiente1: { type: DataTypes.STRING, allowNull: false },

@@ -1,5 +1,3 @@
-import sequelize from "../config/db.js";
-
 jest.mock("../config/db.js", () => ({
   authenticate: jest.fn(),
 }));

@@ -1,12 +1,9 @@
-// src/tests/estudiante.repository.test.js
-
-// --- Mocks antes de importar el repository ---
 jest.mock("../models/estudiante.model.js", () => ({
   create: jest.fn(),
   findOne: jest.fn(),
   findAll: jest.fn(),
   destroy: jest.fn(),
-  belongsTo: jest.fn(), // evita errores de asociaciones
+  belongsTo: jest.fn(), 
 }));
 
 jest.mock("../models/usuario.model.js", () => ({
