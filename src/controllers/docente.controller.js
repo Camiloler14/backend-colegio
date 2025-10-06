@@ -10,9 +10,9 @@ export async function crearDocente(req, res) {
   const {
     codigo,
     primerNombre,
-    segundoNombre,
+    segundoNombre, // eslint-disable-line no-unused-vars
     primerApellido,
-    segundoApellido,
+    segundoApellido, // eslint-disable-line no-unused-vars
     email,
     telefono,
     direccion,
