@@ -28,8 +28,12 @@ jobs:
 
       # 4️⃣ Construir y subir la imagen Docker con tag latest y SHA del commit
       - name: Build and Push Docker image
-        run: docker buildx build --push -t ${{ secrets.DOCKER_HUB_REPO }}:latest -t ${{ secrets.DOCKER_HUB_REPO }}:${GITHUB_SHA::7} ./
-
+        run: |
+          docker buildx build --push \
+          -f $GITHUB_WORKSPACE/Dockerfile \
+          -t ${{ secrets.DOCKER_HUB_REPO }}:latest \
+          -t ${{ secrets.DOCKER_HUB_REPO }}:${GITHUB_SHA::7} \
+          $GITHUB_WORKSPACE
 
       # 5️⃣ Despliegue en EC2
       - name: Deploy to EC2
