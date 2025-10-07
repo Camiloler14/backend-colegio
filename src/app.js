@@ -14,23 +14,34 @@ dotenv.config({ quiet: true });
 
 const app = express();
 
+// Configuración de CORS
+const allowedOrigins = [
+  /^http:\/\/127\.0\.0\.1:\d+$/,  // cualquier puerto en localhost
+  /^http:\/\/localhost:\d+$/      // cualquier puerto en localhost
+];
+
 app.use(
   cors({
-    origin: "*", 
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // Postman, curl, servidores backend
+      if (allowedOrigins.some((pattern) => pattern.test(origin))) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("CORS no permitido"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 
 app.use(express.json());
-
 
 app.use("/api/usuario", usuarioRoutes);
 app.use("/api/estudiante", estudianteRoutes);
 app.use("/api/docente", docenteRoutes);
 app.use("/api/materia", materiaRoutes);
 app.use("/api/inscripciones", estudianteMateriaRoutes);
-
 
 swaggerDocs(app);
 
