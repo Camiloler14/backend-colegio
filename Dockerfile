@@ -1,10 +1,10 @@
-# Imagen base oficial de Node.js
-FROM node:18
+# Etapa de construcción
+FROM node:18-alpine AS builder
 
-# Crear directorio de trabajo
+# Directorio de trabajo
 WORKDIR /app
 
-# Copiar los archivos de dependencias
+# Copiar archivos de dependencias
 COPY package*.json ./
 
 # Instalar dependencias
@@ -13,8 +13,17 @@ RUN npm install
 # Copiar el resto del código
 COPY . .
 
-# Exponer el puerto que usa tu app (3000)
+# Etapa de producción
+FROM node:18-alpine
+
+# Directorio de trabajo
+WORKDIR /app
+
+# Copiar solo los archivos necesarios desde la etapa de construcción
+COPY --from=builder /app .
+
+# Exponer el puerto que utiliza la aplicación
 EXPOSE 3000
 
-# Comando para iniciar la app
+# Comando para iniciar la aplicación
 CMD ["npm", "start"]

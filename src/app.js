@@ -1,28 +1,48 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import authRoutes from './routes/auth.routes.js';
-import studentRoutes from './routes/student.routes.js';
-import teacherRoutes from './routes/teacher.routes.js';
-import subjectRoutes from './routes/subject.routes.js'; 
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
 
-import { swaggerDocs } from './docs/swagger.js';
+import usuarioRoutes from "./routes/usuario.routes.js";
+import estudianteRoutes from "./routes/estudiante.routes.js";
+import docenteRoutes from "./routes/docente.routes.js";
+import materiaRoutes from "./routes/materia.routes.js";
+import estudianteMateriaRoutes from "./routes/estudianteMateria.routes.js";
 
+import { swaggerDocs } from "./docs/swagger.js";
 
 dotenv.config({ quiet: true });
 
-// Crear la aplicación de Express
 const app = express();
 
-// Middleware para parsear el cuerpo de las solicitudes como JSON
+// Configuración de CORS
+const allowedOrigins = [
+  /^http:\/\/127\.0\.0\.1:\d+$/,  // cualquier puerto en localhost
+  /^http:\/\/localhost:\d+$/      // cualquier puerto en localhost
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // Postman, curl, servidores backend
+      if (allowedOrigins.some((pattern) => pattern.test(origin))) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("CORS no permitido"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
+
 app.use(express.json());
 
-// Rutas de la API
-app.use('/api/auth', authRoutes);
-app.use('/api', studentRoutes);
-app.use('/api', teacherRoutes);
-app.use('/api', subjectRoutes); 
+app.use("/api/usuario", usuarioRoutes);
+app.use("/api/estudiante", estudianteRoutes);
+app.use("/api/docente", docenteRoutes);
+app.use("/api/materia", materiaRoutes);
+app.use("/api/inscripciones", estudianteMateriaRoutes);
 
-// Configuración de Swagger para la documentación de la API
 swaggerDocs(app);
 
 export default app;

@@ -5,35 +5,27 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'API Estudiantes',
+      title: 'API Colegio',
       version: '1.0.0',
-      description: 'Documentación API para gestión de estudiantes',
+      description: 'Documentación de la API para la gestión de usuarios y estudiantes',
     },
     servers: [
       {
         url: 'http://localhost:3000/api',
       },
     ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
-    },
-    security: [{
-      bearerAuth: []
-    }],
   },
-apis: ['./src/routes/*.js'],
+ apis: [
+  './src/routes/usuario.routes.js',
+  './src/routes/estudiante.routes.js',
+  './src/routes/docente.routes.js',
+  './src/routes/materia.routes.js'
+],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
 
 export function swaggerDocs(app) {
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  console.log('Documentación Swagger disponible en http://localhost:3000/api/docs');
+  console.log('Swagger docs disponibles en http://localhost:3000/api/docs');
 }
-

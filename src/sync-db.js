@@ -1,40 +1,34 @@
-import sequelize from './config/db.js';
-import Admin from './models/admin.model.js';
-import Docente from './models/teacher.model.js';
-import Materia from './models/subject.model.js';
-// eslint-disable-next-line no-unused-vars
-import Estudiante from './models/student.model.js';
-
-// ✅ Relaciones: Materia <-> Docente por "documento" y no por "id"
-Docente.hasMany(Materia, {
-  foreignKey: 'docenteDocumento',     // Campo en la tabla Materia
-  sourceKey: 'documento',             // Campo en la tabla Docente
-  as: 'materias'
-});
-
-Materia.belongsTo(Docente, {
-  foreignKey: 'docenteDocumento',     // Campo en la tabla Materia
-  targetKey: 'documento',             // Campo en la tabla Docente
-  as: 'docente'
-});
+import sequelize from "./config/db.js";
+import "./models/asociaciones.js"; 
+import bcrypt from "bcrypt";
+import { Usuario } from "./models/asociaciones.js";
 
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log('🟢 Conectado correctamente');
+    console.log("🟢 Conectado correctamente a la base de datos");
 
-    await sequelize.sync({ alter: true }); 
-    console.log('Tablas sincronizadas correctamente');
+    await sequelize.sync({ alter: true });
+    console.log("✅ Tablas y asociaciones sincronizadas correctamente");
 
-    const [, creado] = await Admin.findOrCreate({
-      where: { usuario: 'admin' },
-      defaults: { contraseña: 'admin123' }
+  
+    const [creado] = await Usuario.findOrCreate({
+      where: { codUsuario: "123456" },
+      defaults: {
+        codUsuario: "123456",
+        nombre: "Administrador",
+        rol: "admin",
+        contraseña: await bcrypt.hash("12345", 10),
+      },
     });
 
-    console.log(creado ? 'Admin creado' : 'Admin ya existía');
+    console.log(
+      creado ? "Usuario administrador creado" : "Usuario ya existía"
+    );
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error al sincronizar:", error);
   } finally {
     await sequelize.close();
+    console.log("Conexión cerrada");
   }
 })();
