@@ -28,11 +28,8 @@ jobs:
 
       # 4️⃣ Construir la imagen Docker con tag latest y commit SHA
       - name: Build Docker image
-        run: |
-         docker buildx build \
-          -t ${{ secrets.DOCKER_HUB_REPO }}:latest \
-          -t ${{ secrets.DOCKER_HUB_REPO }}:${GITHUB_SHA::7} \
-          .
+        run: docker buildx build -t ${{ secrets.DOCKER_HUB_REPO }}:latest -t ${{ secrets.DOCKER_HUB_REPO }}:${GITHUB_SHA::7} .
+
 
       # 5️⃣ Subir imágenes a Docker Hub
       - name: Push Docker images to Docker Hub
