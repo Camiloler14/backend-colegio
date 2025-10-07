@@ -24,7 +24,7 @@ export const actualizarUsuario = async (codUsuario, data) => {
   }
 
   await usuario.save();
-
+// eslint-disable-next-line no-unused-vars
   const { contraseña, ...usuarioSinContraseña } = usuario.toJSON();
   return usuarioSinContraseña;
 };
