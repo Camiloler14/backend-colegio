@@ -1,73 +1,73 @@
 import Usuario from "../models/usuario.model.js";
+import sequelize from "../config/db.js";
 import bcrypt from "bcrypt";
 
-jest.mock("bcrypt");
-
 describe("Modelo Usuario", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeAll(async () => {
+    await sequelize.sync({ force: true });
   });
 
-  test("beforeCreate: debe hashear la contraseña si no está hasheada", async () => {
-    bcrypt.hash.mockResolvedValue("hashedPassword");
-
-    const usuario = Usuario.build({
-      codigo: 1,
-      nombre: "Juan Perez",
-      contraseña: "12345",
-      rol: "docente",
-    });
-
-    await Usuario.runHooks("beforeCreate", usuario);
-
-    expect(bcrypt.hash).toHaveBeenCalledTimes(1);
-    expect(bcrypt.hash).toHaveBeenCalledWith("12345", 10);
-    expect(usuario.contraseña).toBe("hashedPassword");
+  afterEach(async () => {
+    await Usuario.destroy({ where: {} });
   });
 
-  test("beforeCreate: no debe hashear si la contraseña ya está hasheada", async () => {
-    const usuario = Usuario.build({
-      codigo: 2,
-      nombre: "Ana Gomez",
-      contraseña: "$2b$10$alreadyhashed",
+  test("Se puede crear un usuario con hash de contraseña", async () => {
+    const data = {
+      codUsuario: "U001",
+      nombre: "Camilo",
+      contraseña: "123456",
       rol: "estudiante",
-    });
+    };
 
-    await Usuario.runHooks("beforeCreate", usuario);
+    const usuario = await Usuario.create(data);
 
-    expect(bcrypt.hash).not.toHaveBeenCalled();
-    expect(usuario.contraseña).toBe("$2b$10$alreadyhashed");
+    
+    expect(usuario.codUsuario).toBe(data.codUsuario);
+    expect(usuario.nombre).toBe(data.nombre);
+    expect(usuario.rol).toBe(data.rol);
+
+  
+    expect(usuario.contraseña).not.toBe(data.contraseña);
+    const match = await bcrypt.compare(data.contraseña, usuario.contraseña);
+    expect(match).toBe(true);
   });
 
-  test("beforeUpdate: debe hashear la contraseña si fue cambiada y no está hasheada", async () => {
-    bcrypt.hash.mockResolvedValue("newHashed");
+  test("No re-hashea una contraseña ya hasheada", async () => {
+    const hashed = await bcrypt.hash("123456", 10);
 
-    const usuario = Usuario.build({
-      codigo: 3,
-      nombre: "Pedro",
-      contraseña: "abc123",
+    const data = {
+      codUsuario: "U002",
+      nombre: "Juan",
+      contraseña: hashed,
+      rol: "docente",
+    };
+
+    const usuario = await Usuario.create(data);
+
+    expect(usuario.contraseña).toBe(hashed); 
+  });
+
+  test("Se puede actualizar la contraseña y se vuelve a hashear", async () => {
+    const data = {
+      codUsuario: "U003",
+      nombre: "Laura",
+      contraseña: "pass123",
       rol: "admin",
-    });
+    };
 
-    // Simulamos que cambió la contraseña
-    usuario.changed = jest.fn().mockReturnValue(true);
+    const usuario = await Usuario.create(data);
 
-    await Usuario.runHooks("beforeUpdate", usuario);
+    usuario.contraseña = "nuevaPass";
+    await usuario.save();
 
-    expect(bcrypt.hash).toHaveBeenCalledTimes(1);
-    expect(usuario.contraseña).toBe("newHashed");
+    expect(usuario.contraseña).not.toBe("nuevaPass");
+    const match = await bcrypt.compare("nuevaPass", usuario.contraseña);
+    expect(match).toBe(true);
   });
 
-  test("Enum de rol solo acepta valores válidos", () => {
-    const validRoles = ["admin", "estudiante", "docente"];
-    validRoles.forEach((rol) => {
-      const usuario = Usuario.build({
-        codigo: 10,
-        nombre: "Test",
-        contraseña: "123",
-        rol,
-      });
-      expect(usuario.rol).toBe(rol);
-    });
+  test("Debe fallar si no se proporciona rol, nombre o contraseña", async () => {
+    await expect(
+      Usuario.create({ codUsuario: "U004" })
+    ).rejects.toThrow();
   });
 });

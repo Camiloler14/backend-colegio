@@ -1,56 +1,46 @@
-import {
-  crearEstudianteService,
-  actualizarEstudianteService,
-  eliminarEstudianteService,
-  obtenerEstudiantesService,
-  obtenerEstudiantePorIdentificacionService
-} from '../services/estudiante.service.js';
+import * as estudianteService from "../services/estudiante.service.js";
 
-export async function crearEstudiante(req, res) {
+export const crearEstudiante = async (req, res) => {
   try {
-    console.log('Datos recibidos:', req.body);
-    const resultado = await crearEstudianteService(req.body);
-    res.status(201).json({ mensaje: 'Estudiante creado', ...resultado });
+    const estudiante = await estudianteService.crearEstudianteService(req.body);
+    res.status(201).json(estudiante);
   } catch (error) {
-    console.error('Error al crear estudiante:', error);
-    res.status(500).json({ mensaje: error.message });
+    res.status(400).json({ mensaje: error.message });
   }
-}
+};
 
-export async function actualizarEstudiante(req, res) {
+export const obtenerTodosEstudiantes = async (req, res) => {
   try {
-    const estudiante = await actualizarEstudianteService(req.params.identificacion, req.body);
-    res.json({ mensaje: 'Estudiante actualizado', estudiante });
-  } catch (error) {
-    res.status(500).json({ mensaje: error.message });
-  }
-}
-
-export async function eliminarEstudiante(req, res) {
-  try {
-    const eliminado = await eliminarEstudianteService(req.params.identificacion);
-    if (!eliminado) return res.status(404).json({ mensaje: 'Estudiante no encontrado' });
-    res.json({ mensaje: 'Estudiante eliminado' });
-  } catch (error) {
-    res.status(500).json({ mensaje: error.message });
-  }
-}
-
-export async function obtenerEstudiantes(req, res) {
-  try {
-    const estudiantes = await obtenerEstudiantesService();
+    const estudiantes = await estudianteService.obtenerTodosEstudiantesService();
     res.json(estudiantes);
   } catch (error) {
     res.status(500).json({ mensaje: error.message });
   }
-}
+};
 
-export async function obtenerEstudiante(req, res) {
+export const obtenerEstudiantePorCodigo = async (req, res) => {
   try {
-    const estudiante = await obtenerEstudiantePorIdentificacionService(req.params.identificacion);
-    if (!estudiante) return res.status(404).json({ mensaje: 'Estudiante no encontrado' });
+    const estudiante = await estudianteService.obtenerEstudiantePorCodigoService(req.params.codEstudiante);
     res.json(estudiante);
   } catch (error) {
-    res.status(500).json({ mensaje: error.message });
+    res.status(404).json({ mensaje: error.message });
   }
-}
+};
+
+export const actualizarEstudiante = async (req, res) => {
+  try {
+    await estudianteService.actualizarEstudianteService(req.params.codEstudiante, req.body);
+    res.json({ mensaje: "Estudiante actualizado correctamente" });
+  } catch (error) {
+    res.status(400).json({ mensaje: error.message });
+  }
+};
+
+export const eliminarEstudiante = async (req, res) => {
+  try {
+    await estudianteService.eliminarEstudianteService(req.params.codEstudiante);
+    res.json({ mensaje: "Estudiante eliminado correctamente" });
+  } catch (error) {
+    res.status(400).json({ mensaje: error.message });
+  }
+};

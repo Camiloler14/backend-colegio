@@ -1,106 +1,62 @@
-// src/tests/usuario.service.test.js
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import * as UsuarioService from "../services/usuario.service.js";
-import UsuarioRepositorio from "../repositories/usuario.repository.js";
+import * as usuarioService from "../services/usuario.service.js";
+import * as usuarioRepo from "../repositories/usuario.repository.js";
 
 jest.mock("../repositories/usuario.repository.js");
-jest.mock("bcrypt");
-jest.mock("jsonwebtoken");
 
 describe("UsuarioService", () => {
-  afterEach(() => {
+  const usuarioMock = {
+    codUsuario: "U001",
+    nombre: "Juan",
+    contraseña: "1234",
+    rol: "estudiante",
+  };
+
+  beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("login", () => {
-    test("debe retornar token si usuario y contraseña son correctos", async () => {
-      const mockUsuario = { codigo: "1001", nombre: "Juan", rol: "admin", contraseña: "hashed" };
-      UsuarioRepositorio.buscarPorCodigo.mockResolvedValue(mockUsuario);
-      bcrypt.compare.mockResolvedValue(true);
-      jwt.sign.mockReturnValue("token123");
+  test("crearUsuarioService crea un usuario", async () => {
+    usuarioRepo.crearUsuario.mockResolvedValue(usuarioMock);
 
-      const res = await UsuarioService.login("1001", "12345");
+    const result = await usuarioService.crearUsuarioService(usuarioMock);
 
-      expect(UsuarioRepositorio.buscarPorCodigo).toHaveBeenCalledWith("1001");
-      expect(bcrypt.compare).toHaveBeenCalledWith("12345", "hashed");
-      expect(jwt.sign).toHaveBeenCalledWith(
-        { codigo: "1001", nombre: "Juan", rol: "admin" },
-        expect.any(String),
-        { expiresIn: "1h" }
-      );
-      expect(res).toEqual({ token: "token123", rol: "admin", nombre: "Juan" });
-    });
-
-    test("lanza error si el usuario no existe", async () => {
-      UsuarioRepositorio.buscarPorCodigo.mockResolvedValue(null);
-
-      await expect(UsuarioService.login("9999", "12345")).rejects.toEqual({
-        status: 404,
-        message: "El usuario no se encuentra registrado."
-      });
-    });
-
-    test("lanza error si la contraseña es incorrecta", async () => {
-      const mockUsuario = { codigo: "1001", nombre: "Juan", rol: "admin", contraseña: "hashed" };
-      UsuarioRepositorio.buscarPorCodigo.mockResolvedValue(mockUsuario);
-      bcrypt.compare.mockResolvedValue(false);
-
-      await expect(UsuarioService.login("1001", "wrongpass")).rejects.toEqual({
-        status: 401,
-        message: "La contraseña ingresada es incorrecta."
-      });
-    });
+    expect(usuarioRepo.crearUsuario).toHaveBeenCalledWith(usuarioMock);
+    expect(result).toEqual(usuarioMock);
   });
 
-  describe("crearUsuario", () => {
-    test("debe crear usuario con contraseña hasheada", async () => {
-      const datos = { codigo: "1002", nombre: "Ana", contraseña: "12345", rol: "estudiante" };
-      bcrypt.hash.mockResolvedValue("hashed12345");
-      UsuarioRepositorio.crear.mockResolvedValue({ ...datos, contraseña: "hashed12345" });
+  test("obtenerUsuarioPorCodigoService devuelve un usuario", async () => {
+    usuarioRepo.obtenerUsuarioPorCodigo.mockResolvedValue(usuarioMock);
 
-      const res = await UsuarioService.crearUsuario(datos);
+    const result = await usuarioService.obtenerUsuarioPorCodigoService("U001");
 
-      expect(bcrypt.hash).toHaveBeenCalledWith("12345", 10);
-      expect(UsuarioRepositorio.crear).toHaveBeenCalledWith({ ...datos, contraseña: "hashed12345" });
-      expect(res.contraseña).toBe("hashed12345");
-    });
+    expect(usuarioRepo.obtenerUsuarioPorCodigo).toHaveBeenCalledWith("U001");
+    expect(result).toEqual(usuarioMock);
   });
 
-  describe("obtenerUsuarios", () => {
-    test("debe llamar a obtenerTodos del repositorio", async () => {
-      const usuarios = [{ codigo: "1001" }, { codigo: "1002" }];
-      UsuarioRepositorio.obtenerTodos.mockResolvedValue(usuarios);
+  test("obtenerTodosUsuariosService devuelve todos los usuarios", async () => {
+    usuarioRepo.obtenerTodosUsuarios.mockResolvedValue([usuarioMock]);
 
-      const res = await UsuarioService.obtenerUsuarios();
+    const result = await usuarioService.obtenerTodosUsuariosService();
 
-      expect(UsuarioRepositorio.obtenerTodos).toHaveBeenCalled();
-      expect(res).toEqual(usuarios);
-    });
+    expect(usuarioRepo.obtenerTodosUsuarios).toHaveBeenCalled();
+    expect(result).toEqual([usuarioMock]);
   });
 
-  describe("actualizarUsuario", () => {
-    test("debe actualizar usuario y hashear contraseña si se proporciona", async () => {
-      const datos = { nombre: "Ana", contraseña: "newpass" };
-      bcrypt.hash.mockResolvedValue("hashedNewPass");
-      UsuarioRepositorio.actualizar.mockResolvedValue({ ...datos, contraseña: "hashedNewPass" });
+  test("actualizarUsuarioService actualiza un usuario", async () => {
+    usuarioRepo.actualizarUsuario.mockResolvedValue([1]);
 
-      const res = await UsuarioService.actualizarUsuario("1002", datos);
+    const result = await usuarioService.actualizarUsuarioService("U001", { nombre: "Pedro" });
 
-      expect(bcrypt.hash).toHaveBeenCalledWith("newpass", 10);
-      expect(UsuarioRepositorio.actualizar).toHaveBeenCalledWith("1002", { ...datos, contraseña: "hashedNewPass" });
-      expect(res.contraseña).toBe("hashedNewPass");
-    });
+    expect(usuarioRepo.actualizarUsuario).toHaveBeenCalledWith("U001", { nombre: "Pedro" });
+    expect(result).toEqual([1]);
   });
 
-  describe("eliminarUsuario", () => {
-    test("debe llamar a eliminar del repositorio", async () => {
-      UsuarioRepositorio.eliminar.mockResolvedValue(true);
+  test("eliminarUsuarioService elimina un usuario", async () => {
+    usuarioRepo.eliminarUsuario.mockResolvedValue(true);
 
-      const res = await UsuarioService.eliminarUsuario("1002");
+    const result = await usuarioService.eliminarUsuarioService("U001");
 
-      expect(UsuarioRepositorio.eliminar).toHaveBeenCalledWith("1002");
-      expect(res).toBe(true);
-    });
+    expect(usuarioRepo.eliminarUsuario).toHaveBeenCalledWith("U001");
+    expect(result).toEqual(true);
   });
 });

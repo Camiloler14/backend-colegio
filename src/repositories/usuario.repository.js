@@ -1,20 +1,38 @@
 import Usuario from "../models/usuario.model.js";
 
-const UsuarioRepositorio = {
-  buscarPorCodigo: async (codigo) =>
-    await Usuario.findOne({ where: { codigo } }),
-  obtenerTodos: async () => await Usuario.findAll(),
-  crear: async (datosUsuario) => await Usuario.create(datosUsuario),
-  actualizar: async (codigo, datosUsuario) => {
-    const [editado] = await Usuario.update(datosUsuario, { where: { codigo } });
-    if (!editado) throw new Error("Usuario no encontrado");
-    return Usuario.findOne({ where: { codigo } });
-  },
-  eliminar: async (codigo) => {
-    const eliminado = await Usuario.destroy({ where: { codigo } });
-    if (!eliminado) throw new Error("Usuario no encontrado");
-    return true;
-  },
+export const crearUsuario = async (data) => {
+  return await Usuario.create(data);
 };
 
-export default UsuarioRepositorio;
+export const obtenerUsuarioPorCodigo = async (codUsuario) => {
+  return await Usuario.findOne({ where: { codUsuario } });
+};
+
+export const obtenerTodosUsuarios = async () => {
+  return await Usuario.findAll({
+    attributes: { exclude: ["contraseña"] },
+  });
+};
+
+export const actualizarUsuario = async (codUsuario, data) => {
+  const usuario = await Usuario.findByPk(codUsuario);
+  if (!usuario) return null;
+  if (data.nombre) usuario.nombre = data.nombre;
+  if (data.rol) usuario.rol = data.rol;
+  if (data.contraseña) {
+    usuario.contraseña = data.contraseña;
+  }
+
+  await usuario.save();
+
+  const { contraseña, ...usuarioSinContraseña } = usuario.toJSON();
+  return usuarioSinContraseña;
+};
+
+export const eliminarUsuario = async (codUsuario) => {
+  const usuario = await Usuario.findByPk(codUsuario);
+  if (!usuario) return null;
+
+  await usuario.destroy();
+  return usuario;
+};

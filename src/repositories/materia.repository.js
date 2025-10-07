@@ -1,28 +1,42 @@
 import Materia from "../models/materia.model.js";
+import Docente from "../models/docente.model.js";
 
-export const MateriaRepository = {
-  async crear(datos) {
-    return await Materia.create(datos);
+const MateriaRepository = {
+  async crearMateria(data) {
+    return await Materia.create(data);
   },
 
-  async obtenerTodas() {
-    return await Materia.findAll();
+  async obtenerMaterias() {
+    return await Materia.findAll({
+      include: [
+        {
+          model: Docente,
+          as: "docente", 
+          attributes: ["codDocente", "primerNombre", "primerApellido"],
+        },
+      ],
+    });
   },
 
-  async obtenerPorId(id) {
-    return await Materia.findByPk(id);
+  async obtenerMateriaPorCodigo(codigoMateria) {
+    return await Materia.findByPk(codigoMateria, {
+      include: [
+        {
+          model: Docente,
+          as: "docente", 
+          attributes: ["codDocente", "primerNombre", "primerApellido"],
+        },
+      ],
+    });
   },
 
-  async actualizar(id, datos) {
-    const materia = await Materia.findByPk(id);
-    if (!materia) return null;
-    return await materia.update(datos);
+  async actualizarMateria(codigoMateria, data) {
+    return await Materia.update(data, { where: { codigoMateria } });
   },
 
-  async eliminar(id) {
-    const materia = await Materia.findByPk(id);
-    if (!materia) return null;
-    await materia.destroy();
-    return materia;
+  async eliminarMateria(codigoMateria) {
+    return await Materia.destroy({ where: { codigoMateria } });
   },
 };
+
+export default MateriaRepository;

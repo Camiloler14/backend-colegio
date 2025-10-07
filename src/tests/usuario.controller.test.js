@@ -1,102 +1,205 @@
-import request from "supertest";
-import express from "express";
-import {
-  loginUsuario,
-  registrarUsuario,
-  obtenerTodosUsuarios,
-  actualizarUsuarioController,
-  eliminarUsuarioController,
-} from "../controllers/usuario.controller.js";
+import * as usuarioController from "../controllers/usuario.controller.js";
+import * as usuarioService from "../services/usuario.service.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
-// Mock de los servicios
-jest.mock("../services/usuario.service.js", () => ({
-  login: jest.fn(),
-  crearUsuario: jest.fn(),
-  obtenerUsuarios: jest.fn(),
-  actualizarUsuario: jest.fn(),
-  eliminarUsuario: jest.fn(),
-}));
+jest.mock("bcrypt");
+jest.mock("jsonwebtoken");
 
-import {
-  login,
-  crearUsuario,
-  obtenerUsuarios,
-  actualizarUsuario,
-  eliminarUsuario,
-} from "../services/usuario.service.js";
+describe("usuario.controller", () => {
+  let req;
+  let res;
 
-// Configurar Express para testing
-const app = express();
-app.use(express.json());
-app.post("/login", loginUsuario);
-app.post("/usuarios", registrarUsuario);
-app.get("/usuarios", obtenerTodosUsuarios);
-app.put("/usuarios/:codigo", actualizarUsuarioController);
-app.delete("/usuarios/:codigo", eliminarUsuarioController);
-
-describe("UsuarioController", () => {
   beforeEach(() => {
+    req = {};
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
     jest.clearAllMocks();
   });
 
-  test("Login usuario - éxito", async () => {
-    login.mockResolvedValue({ token: "abc123", rol: "admin", nombre: "Juan" });
+  it("crearUsuario - éxito", async () => {
+    req.body = { codUsuario: "1", nombre: "Camilo" };
+    const usuarioMock = { codUsuario: "1", nombre: "Camilo" };
+    jest.spyOn(usuarioService, "crearUsuarioService").mockResolvedValue(usuarioMock);
 
-    const res = await request(app).post("/login").send({ codigo: "1001", password: "1234" });
+    await usuarioController.crearUsuario(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty("mensaje", "Login exitoso");
-    expect(res.body).toHaveProperty("token", "abc123");
-    expect(res.body).toHaveProperty("rol", "admin");
-    expect(res.body).toHaveProperty("nombre", "Juan");
+    expect(usuarioService.crearUsuarioService).toHaveBeenCalledWith(req.body);
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(usuarioMock);
   });
 
-  test("Login usuario - faltan campos", async () => {
-    const res = await request(app).post("/login").send({ codigo: "1001" });
+  it("crearUsuario - error", async () => {
+    req.body = { codUsuario: "1" };
+    const error = new Error("Error creación");
+    jest.spyOn(usuarioService, "crearUsuarioService").mockRejectedValue(error);
 
-    expect(res.statusCode).toBe(400);
-    expect(res.body).toHaveProperty("mensaje", "Código y contraseña son obligatorios");
+    await usuarioController.crearUsuario(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
   });
 
-  test("Registrar usuario - éxito", async () => {
-    crearUsuario.mockResolvedValue({ codigo: "1002", nombre: "Carlos", rol: "docente" });
+  it("obtenerUsuarioPorCodigo - éxito", async () => {
+    req.params = { codUsuario: "1" };
+    const usuarioMock = { codUsuario: "1", nombre: "Camilo" };
+    jest.spyOn(usuarioService, "obtenerUsuarioPorCodigoService").mockResolvedValue(usuarioMock);
 
-    const res = await request(app)
-      .post("/usuarios")
-      .send({ codigo: "1002", nombre: "Carlos", contraseña: "1234", rol: "docente" });
+    await usuarioController.obtenerUsuarioPorCodigo(req, res);
 
-    expect(res.statusCode).toBe(201);
-    expect(res.body).toHaveProperty("mensaje", "Usuario creado correctamente");
-    expect(res.body.usuario).toHaveProperty("codigo", "1002");
+    expect(usuarioService.obtenerUsuarioPorCodigoService).toHaveBeenCalledWith("1");
+    expect(res.json).toHaveBeenCalledWith(usuarioMock);
   });
 
-  test("Obtener todos los usuarios - éxito", async () => {
-    obtenerUsuarios.mockResolvedValue([
-      { codigo: "1001", nombre: "Juan", rol: "admin" }
-    ]);
+  it("obtenerUsuarioPorCodigo - no encontrado", async () => {
+    req.params = { codUsuario: "1" };
+    jest.spyOn(usuarioService, "obtenerUsuarioPorCodigoService").mockResolvedValue(null);
 
-    const res = await request(app).get("/usuarios");
+    await usuarioController.obtenerUsuarioPorCodigo(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toEqual([{ codigo: "1001", nombre: "Juan", rol: "admin" }]);
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ message: "Usuario no encontrado" });
   });
 
-  test("Actualizar usuario - éxito", async () => {
-    actualizarUsuario.mockResolvedValue({ codigo: "1001", nombre: "Juan Updated" });
+  it("obtenerUsuarioPorCodigo - error", async () => {
+    req.params = { codUsuario: "1" }; 
+    const error = new Error("Error interno");
+    jest.spyOn(usuarioService, "obtenerUsuarioPorCodigoService").mockRejectedValue(error);
 
-    const res = await request(app).put("/usuarios/1001").send({ nombre: "Juan Updated" });
+    await usuarioController.obtenerUsuarioPorCodigo(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty("mensaje", "Usuario actualizado correctamente");
-    expect(res.body.usuario).toHaveProperty("nombre", "Juan Updated");
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
   });
 
-  test("Eliminar usuario - éxito", async () => {
-    eliminarUsuario.mockResolvedValue(true);
+  it("obtenerTodosUsuarios - éxito", async () => {
+    const usuariosMock = [{ codUsuario: "1", nombre: "Camilo" }];
+    jest.spyOn(usuarioService, "obtenerTodosUsuariosService").mockResolvedValue(usuariosMock);
 
-    const res = await request(app).delete("/usuarios/1001");
+    await usuarioController.obtenerTodosUsuarios(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty("mensaje", "Usuario eliminado correctamente");
+    expect(res.json).toHaveBeenCalledWith(usuariosMock);
+  });
+
+  it("obtenerTodosUsuarios - error", async () => {
+    const error = new Error("Error interno");
+    jest.spyOn(usuarioService, "obtenerTodosUsuariosService").mockRejectedValue(error);
+
+    await usuarioController.obtenerTodosUsuarios(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
+  });
+
+  it("actualizarUsuario - éxito", async () => {
+    req.params = { codUsuario: "1" };
+    req.body = { nombre: "Nuevo nombre" };
+    jest.spyOn(usuarioService, "actualizarUsuarioService").mockResolvedValue([1]);
+
+    await usuarioController.actualizarUsuario(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({ message: "Usuario actualizado correctamente" });
+  });
+
+  it("actualizarUsuario - no encontrado", async () => {
+    req.params = { codUsuario: "1" };
+    req.body = { nombre: "Nuevo nombre" };
+    jest.spyOn(usuarioService, "actualizarUsuarioService").mockResolvedValue([0]);
+
+    await usuarioController.actualizarUsuario(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ message: "Usuario no encontrado" });
+  });
+
+  it("actualizarUsuario - error", async () => {
+    req.params = { codUsuario: "1" }; 
+    req.body = { nombre: "Nuevo nombre" };
+    const error = new Error("Error actualización");
+    jest.spyOn(usuarioService, "actualizarUsuarioService").mockRejectedValue(error);
+
+    await usuarioController.actualizarUsuario(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
+  });
+
+  it("eliminarUsuario - éxito", async () => {
+    req.params = { codUsuario: "1" };
+    jest.spyOn(usuarioService, "eliminarUsuarioService").mockResolvedValue(true);
+
+    await usuarioController.eliminarUsuario(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({ message: "Usuario eliminado correctamente" });
+  });
+
+  it("eliminarUsuario - no encontrado", async () => {
+    req.params = { codUsuario: "1" };
+    jest.spyOn(usuarioService, "eliminarUsuarioService").mockResolvedValue(false);
+
+    await usuarioController.eliminarUsuario(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ message: "Usuario no encontrado" });
+  });
+
+  it("eliminarUsuario - error", async () => {
+    req.params = { codUsuario: "1" }; 
+    const error = new Error("Error eliminación");
+    jest.spyOn(usuarioService, "eliminarUsuarioService").mockRejectedValue(error);
+
+    await usuarioController.eliminarUsuario(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
+  });
+
+  it("loginUsuario - éxito", async () => {
+    req.body = { codUsuario: "1", contraseña: "12345" };
+    const usuarioMock = { codUsuario: "1", contraseña: "hash", rol: "admin" };
+    jest.spyOn(usuarioService, "obtenerUsuarioPorCodigoService").mockResolvedValue(usuarioMock);
+    bcrypt.compare.mockResolvedValue(true);
+    jwt.sign.mockReturnValue("token_mock");
+
+    await usuarioController.loginUsuario(req, res);
+
+    expect(bcrypt.compare).toHaveBeenCalledWith("12345", "hash");
+    expect(jwt.sign).toHaveBeenCalledWith({ codUsuario: "1", rol: "admin" }, expect.any(String), { expiresIn: "2h" });
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Login exitoso", token: "token_mock" });
+  });
+
+  it("loginUsuario - usuario no encontrado", async () => {
+    req.body = { codUsuario: "1", contraseña: "12345" };
+    jest.spyOn(usuarioService, "obtenerUsuarioPorCodigoService").mockResolvedValue(null);
+
+    await usuarioController.loginUsuario(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Usuario no encontrado" });
+  });
+
+  it("loginUsuario - contraseña incorrecta", async () => {
+    req.body = { codUsuario: "1", contraseña: "12345" };
+    const usuarioMock = { codUsuario: "1", contraseña: "hash", rol: "admin" };
+    jest.spyOn(usuarioService, "obtenerUsuarioPorCodigoService").mockResolvedValue(usuarioMock);
+    bcrypt.compare.mockResolvedValue(false);
+
+    await usuarioController.loginUsuario(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Contraseña incorrecta" });
+  });
+
+  it("loginUsuario - error interno", async () => {
+    req.body = { codUsuario: "1", contraseña: "12345" };
+    const error = new Error("Error interno");
+    jest.spyOn(usuarioService, "obtenerUsuarioPorCodigoService").mockRejectedValue(error);
+
+    await usuarioController.loginUsuario(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Error interno del servidor" });
   });
 });

@@ -1,127 +1,157 @@
-import request from "supertest";
-import express from "express";
 import { EstudianteMateriaController } from "../controllers/estudianteMateria.controller.js";
-
-// Mock del servicio
-jest.mock("../services/estudianteMateria.service.js", () => ({
-  EstudianteMateriaService: {
-    inscribirEstudiante: jest.fn(),
-    obtenerMateriasDeEstudiante: jest.fn(),
-    obtenerEstudiantesDeMateria: jest.fn(),
-    actualizarNotas: jest.fn(),
-    eliminarInscripcion: jest.fn(),
-  },
-}));
-
 import { EstudianteMateriaService } from "../services/estudianteMateria.service.js";
 
-// Configurar Express para testing
-const app = express();
-app.use(express.json());
-app.post("/inscripciones", EstudianteMateriaController.inscribir);
-app.get(
-  "/inscripciones/estudiante/:codigoEstudiante",
-  EstudianteMateriaController.obtenerPorEstudiante
-);
-app.get(
-  "/inscripciones/materia/:codigoMateria",
-  EstudianteMateriaController.obtenerPorMateria
-);
-app.put(
-  "/inscripciones/:codigoEstudiante/:codigoMateria",
-  EstudianteMateriaController.actualizarNotas
-);
-app.delete(
-  "/inscripciones/:codigoEstudiante/:codigoMateria",
-  EstudianteMateriaController.eliminar
-);
-
 describe("EstudianteMateriaController", () => {
+  let req;
+  let res;
+
   beforeEach(() => {
+    req = {};
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
     jest.clearAllMocks();
   });
 
-  test("Inscribir estudiante - éxito", async () => {
-    EstudianteMateriaService.inscribirEstudiante.mockResolvedValue({
-      codigoEstudiante: "123",
-      codigoMateria: "MAT101",
+  it("inscribir - éxito", async () => {
+    req.body = { codigoEstudiante: 1, codigoMateria: 101 };
+    const registroMock = { codigoEstudiante: 1, codigoMateria: 101 };
+    jest.spyOn(EstudianteMateriaService, "inscribirEstudiante").mockResolvedValue(registroMock);
+
+    await EstudianteMateriaController.inscribir(req, res);
+
+    expect(EstudianteMateriaService.inscribirEstudiante).toHaveBeenCalledWith(req.body);
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(registroMock);
+  });
+
+  it("inscribir - error", async () => {
+    const error = new Error("Error interno");
+    jest.spyOn(EstudianteMateriaService, "inscribirEstudiante").mockRejectedValue(error);
+
+    await EstudianteMateriaController.inscribir(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      mensaje: "Error al inscribir estudiante en materia",
+      error,
     });
-
-    const res = await request(app)
-      .post("/inscripciones")
-      .send({ codigoEstudiante: "123", codigoMateria: "MAT101" });
-
-    expect(res.statusCode).toBe(201);
-    expect(res.body).toHaveProperty("codigoEstudiante", "123");
-    expect(res.body).toHaveProperty("codigoMateria", "MAT101");
   });
 
-  test("Obtener materias por estudiante - éxito", async () => {
-    EstudianteMateriaService.obtenerMateriasDeEstudiante.mockResolvedValue([
-      { codigoMateria: "MAT101", nota: 4.5 },
-    ]);
+  it("obtenerPorEstudiante - éxito", async () => {
+    req.params = { codigoEstudiante: "1" };
+    const registrosMock = [{ codigoEstudiante: 1, codigoMateria: 101 }];
+    jest.spyOn(EstudianteMateriaService, "obtenerMateriasDeEstudiante").mockResolvedValue(registrosMock);
 
-    const res = await request(app).get("/inscripciones/estudiante/123");
+    await EstudianteMateriaController.obtenerPorEstudiante(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toEqual([{ codigoMateria: "MAT101", nota: 4.5 }]);
+    expect(EstudianteMateriaService.obtenerMateriasDeEstudiante).toHaveBeenCalledWith("1");
+    expect(res.json).toHaveBeenCalledWith(registrosMock);
   });
 
-  test("Obtener estudiantes por materia - éxito", async () => {
-    EstudianteMateriaService.obtenerEstudiantesDeMateria.mockResolvedValue([
-      { codigoEstudiante: "123", nota: 4.5 },
-    ]);
+  it("obtenerPorEstudiante - error", async () => {
+    req.params = { codigoEstudiante: "1" };
+    const error = new Error("Error interno");
+    jest.spyOn(EstudianteMateriaService, "obtenerMateriasDeEstudiante").mockRejectedValue(error);
 
-    const res = await request(app).get("/inscripciones/materia/MAT101");
+    await EstudianteMateriaController.obtenerPorEstudiante(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toEqual([{ codigoEstudiante: "123", nota: 4.5 }]);
-  });
-
-  test("Actualizar notas - éxito", async () => {
-    EstudianteMateriaService.actualizarNotas.mockResolvedValue({
-      codigoEstudiante: "123",
-      codigoMateria: "MAT101",
-      nota: 5.0,
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      mensaje: "Error al obtener materias del estudiante",
+      error,
     });
-
-    const res = await request(app)
-      .put("/inscripciones/123/MAT101")
-      .send({ nota: 5.0 });
-
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty("nota", 5.0);
   });
 
-  test("Actualizar notas - no encontrado", async () => {
-    EstudianteMateriaService.actualizarNotas.mockResolvedValue(null);
+  it("obtenerPorMateria - éxito", async () => {
+    req.params = { codigoMateria: "101" };
+    const registrosMock = [{ codigoEstudiante: 1, codigoMateria: 101 }];
+    jest.spyOn(EstudianteMateriaService, "obtenerEstudiantesDeMateria").mockResolvedValue(registrosMock);
 
-    const res = await request(app)
-      .put("/inscripciones/999/MAT101")
-      .send({ nota: 5.0 });
+    await EstudianteMateriaController.obtenerPorMateria(req, res);
 
-    expect(res.statusCode).toBe(404);
-    expect(res.body).toHaveProperty("mensaje", "Registro no encontrado");
+    expect(EstudianteMateriaService.obtenerEstudiantesDeMateria).toHaveBeenCalledWith("101");
+    expect(res.json).toHaveBeenCalledWith(registrosMock);
   });
 
-  test("Eliminar inscripción - éxito", async () => {
-    EstudianteMateriaService.eliminarInscripcion.mockResolvedValue(true);
+  it("obtenerPorMateria - error", async () => {
+    req.params = { codigoMateria: "101" };
+    const error = new Error("Error interno");
+    jest.spyOn(EstudianteMateriaService, "obtenerEstudiantesDeMateria").mockRejectedValue(error);
 
-    const res = await request(app).delete("/inscripciones/123/MAT101");
+    await EstudianteMateriaController.obtenerPorMateria(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty(
-      "mensaje",
-      "Inscripción eliminada correctamente"
-    );
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      mensaje: "Error al obtener estudiantes de la materia",
+      error,
+    });
   });
 
-  test("Eliminar inscripción - no encontrado", async () => {
-    EstudianteMateriaService.eliminarInscripcion.mockResolvedValue(false);
+  it("actualizarNotas - éxito", async () => {
+    req.params = { codigoEstudiante: "1", codigoMateria: "101" };
+    req.body = { nota: 5 };
+    const registroMock = { codigoEstudiante: 1, codigoMateria: 101, nota: 5 };
+    jest.spyOn(EstudianteMateriaService, "actualizarNotas").mockResolvedValue(registroMock);
 
-    const res = await request(app).delete("/inscripciones/999/MAT101");
+    await EstudianteMateriaController.actualizarNotas(req, res);
 
-    expect(res.statusCode).toBe(404);
-    expect(res.body).toHaveProperty("mensaje", "Registro no encontrado");
+    expect(EstudianteMateriaService.actualizarNotas).toHaveBeenCalledWith("1", "101", req.body);
+    expect(res.json).toHaveBeenCalledWith(registroMock);
+  });
+
+  it("actualizarNotas - no encontrado", async () => {
+    req.params = { codigoEstudiante: "1", codigoMateria: "101" };
+    req.body = { nota: 5 };
+    jest.spyOn(EstudianteMateriaService, "actualizarNotas").mockResolvedValue(null);
+
+    await EstudianteMateriaController.actualizarNotas(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Registro no encontrado" });
+  });
+
+  it("actualizarNotas - error", async () => {
+    req.params = { codigoEstudiante: "1", codigoMateria: "101" };
+    req.body = { nota: 5 };
+    const error = new Error("Error interno");
+    jest.spyOn(EstudianteMateriaService, "actualizarNotas").mockRejectedValue(error);
+
+    await EstudianteMateriaController.actualizarNotas(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Error al actualizar notas", error });
+  });
+
+  it("eliminar - éxito", async () => {
+    req.params = { codigoEstudiante: "1", codigoMateria: "101" };
+    jest.spyOn(EstudianteMateriaService, "eliminarInscripcion").mockResolvedValue(true);
+
+    await EstudianteMateriaController.eliminar(req, res);
+
+    expect(EstudianteMateriaService.eliminarInscripcion).toHaveBeenCalledWith("1", "101");
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Inscripción eliminada correctamente" });
+  });
+
+  it("eliminar - no encontrado", async () => {
+    req.params = { codigoEstudiante: "1", codigoMateria: "101" };
+    jest.spyOn(EstudianteMateriaService, "eliminarInscripcion").mockResolvedValue(null);
+
+    await EstudianteMateriaController.eliminar(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Registro no encontrado" });
+  });
+
+  it("eliminar - error", async () => {
+    req.params = { codigoEstudiante: "1", codigoMateria: "101" };
+    const error = new Error("Error interno");
+    jest.spyOn(EstudianteMateriaService, "eliminarInscripcion").mockRejectedValue(error);
+
+    await EstudianteMateriaController.eliminar(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Error al eliminar inscripción", error });
   });
 });

@@ -1,23 +1,21 @@
-import { DocenteRepository } from "../repositories/docente.repository.js";
+import * as docenteRepo from "../repositories/docente.repository.js";
 
-const docenteRepository = new DocenteRepository();
+export const crearDocenteService = async (data) => {
+  return await docenteRepo.crearDocente(data);
+};
 
-export async function crearDocenteServicio(datos) {
-  return await docenteRepository.crearDocente(datos);
-}
+export const obtenerDocentePorCodigoService = async (codDocente) => {
+  return await docenteRepo.obtenerDocentePorCodigo(codDocente);
+};
 
-export async function obtenerDocentesServicio() {
-  return await docenteRepository.obtenerDocentes();
-}
+export const obtenerTodosDocentesService = async () => {
+  return await docenteRepo.obtenerTodosDocentes();
+};
 
-export async function obtenerDocentePorDocumentoServicio(documento) {
-  return await docenteRepository.obtenerDocentePorDocumento(documento);
-}
+export const actualizarDocenteService = async (codDocente, data) => {
+  return await docenteRepo.actualizarDocente(codDocente, data);
+};
 
-export async function actualizarDocenteServicio(documento, datos) {
-  return await docenteRepository.actualizarDocente(documento, datos);
-}
-
-export async function eliminarDocenteServicio(documento) {
-  return await docenteRepository.eliminarDocente(documento);
-}
+export const eliminarDocenteService = async (codDocente) => {
+  return await docenteRepo.eliminarDocente(codDocente);
+};

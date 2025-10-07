@@ -1,51 +1,53 @@
-import { MateriaService } from "../services/materia.service.js";
+import MateriaService from "../services/materia.service.js";
 
-export const MateriaController = {
-  async crear(req, res) {
-    try {
-      const materia = await MateriaService.crearMateria(req.body);
-      res.status(201).json(materia);
-    } catch (error) {
-      res.status(500).json({ mensaje: "Error al crear materia", error });
-    }
-  },
+export async function crearMateria(req, res) {
+  try {
+    const materia = await MateriaService.crearMateria(req.body);
+    res.status(201).json({ mensaje: "Materia creada correctamente", materia });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
 
-  async listar(req, res) {
-    try {
-      const materias = await MateriaService.listarMaterias();
-      res.json(materias);
-    } catch (error) {
-      res.status(500).json({ mensaje: "Error al listar materias", error });
-    }
-  },
+export async function obtenerMaterias(req, res) {
+  try {
+    const materias = await MateriaService.obtenerMaterias();
+    res.json(materias);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
 
-  async obtener(req, res) {
-    try {
-      const materia = await MateriaService.obtenerMateria(req.params.id);
-      if (!materia) return res.status(404).json({ mensaje: "Materia no encontrada" });
-      res.json(materia);
-    } catch (error) {
-      res.status(500).json({ mensaje: "Error al obtener materia", error });
-    }
-  },
+export async function obtenerMateriaPorCodigo(req, res) {
+  try {
+    const materia = await MateriaService.obtenerMateriaPorCodigo(
+      req.params.codigoMateria
+    );
+    res.json(materia);
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
+}
 
-  async actualizar(req, res) {
-    try {
-      const materia = await MateriaService.actualizarMateria(req.params.id, req.body);
-      if (!materia) return res.status(404).json({ mensaje: "Materia no encontrada" });
-      res.json(materia);
-    } catch (error) {
-      res.status(500).json({ mensaje: "Error al actualizar materia", error });
-    }
-  },
+export async function actualizarMateria(req, res) {
+  try {
+    const respuesta = await MateriaService.actualizarMateria(
+      req.params.codigoMateria,
+      req.body
+    );
+    res.json(respuesta);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
 
-  async eliminar(req, res) {
-    try {
-      const materia = await MateriaService.eliminarMateria(req.params.id);
-      if (!materia) return res.status(404).json({ mensaje: "Materia no encontrada" });
-      res.json({ mensaje: "Materia eliminada correctamente" });
-    } catch (error) {
-      res.status(500).json({ mensaje: "Error al eliminar materia", error });
-    }
-  },
-};
+export async function eliminarMateria(req, res) {
+  try {
+    const respuesta = await MateriaService.eliminarMateria(
+      req.params.codigoMateria
+    );
+    res.json(respuesta);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}

@@ -1,92 +1,90 @@
-import {
-  login,
-  crearUsuario,
-  obtenerUsuarios,
-  actualizarUsuario,
-  eliminarUsuario,
-} from "../services/usuario.service.js";
+import * as usuarioService from "../services/usuario.service.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
-export async function loginUsuario(req, res) {
-  const { codigo, password } = req.body;
+const JWT_SECRET = process.env.JWT_SECRET || "open system";
 
-  if (!codigo || !password) {
-    console.log("Login fallido: faltan campos");
-    return res
-      .status(400)
-      .json({ mensaje: "Código y contraseña son obligatorios" });
-  }
-
+export const crearUsuario = async (req, res) => {
   try {
-    console.log("Intentando login para código:", codigo);
-    const { token, rol, nombre } = await login(codigo, password);
-
-    console.log("Login exitoso para usuario:", codigo);
-    return res.json({ mensaje: "Login exitoso", token, rol, nombre });
+    const usuario = await usuarioService.crearUsuarioService(req.body);
+    res.status(201).json(usuario);
   } catch (error) {
-    console.error("Error en login:", error);
-
-    if (error.status && error.message) {
-      console.log("Motivo del error:", error.message);
-      return res.status(error.status).json({ mensaje: error.message });
-    }
-
-    return res
-      .status(500)
-      .json({ mensaje: "Ocurrió un error en el servidor." });
+    res.status(500).json({ error: error.message });
   }
-}
+};
 
-export async function registrarUsuario(req, res) {
-  const { codigo, nombre, contraseña, rol } = req.body;
-
-  if (!codigo || !nombre || !contraseña || !rol) {
-    return res
-      .status(400)
-      .json({ mensaje: "Todos los campos son obligatorios" });
-  }
-
+export const obtenerUsuarioPorCodigo = async (req, res) => {
   try {
-    const usuario = await crearUsuario({ codigo, nombre, contraseña, rol });
-    return res
-      .status(201)
-      .json({ mensaje: "Usuario creado correctamente", usuario });
+    const usuario = await usuarioService.obtenerUsuarioPorCodigoService(
+      req.params.codUsuario
+    );
+    if (!usuario)
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    res.json(usuario);
   } catch (error) {
-    console.error("Error creando usuario:", error);
-    return res.status(error.status || 500).json({ mensaje: error.message });
+    res.status(500).json({ error: error.message });
   }
-}
+};
 
-export async function obtenerTodosUsuarios(req, res) {
+export const obtenerTodosUsuarios = async (req, res) => {
   try {
-    const usuarios = await obtenerUsuarios();
-    return res.json(usuarios);
+    const usuarios = await usuarioService.obtenerTodosUsuariosService();
+    res.json(usuarios);
   } catch (error) {
-    console.error("Error obteniendo usuarios:", error);
-    return res.status(error.status || 500).json({ mensaje: error.message });
+    res.status(500).json({ error: error.message });
   }
-}
+};
 
-export async function actualizarUsuarioController(req, res) {
-  const { codigo } = req.params;
-  const datos = req.body;
-
+export const actualizarUsuario = async (req, res) => {
   try {
-    const usuario = await actualizarUsuario(codigo, datos);
-    return res.json({ mensaje: "Usuario actualizado correctamente", usuario });
+    const result = await usuarioService.actualizarUsuarioService(
+      req.params.codUsuario,
+      req.body
+    );
+    if (result[0] === 0)
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    res.json({ message: "Usuario actualizado correctamente" });
   } catch (error) {
-    console.error("Error actualizando usuario:", error);
-    return res.status(error.status || 500).json({ mensaje: error.message });
+    res.status(500).json({ error: error.message });
   }
-}
+};
 
-export async function eliminarUsuarioController(req, res) {
-  const { codigo } = req.params;
-
+export const eliminarUsuario = async (req, res) => {
   try {
-    await eliminarUsuario(codigo);
-    return res.json({ mensaje: "Usuario eliminado correctamente" });
+    const deleted = await usuarioService.eliminarUsuarioService(
+      req.params.codUsuario
+    );
+    if (!deleted)
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    res.json({ message: "Usuario eliminado correctamente" });
   } catch (error) {
-    console.error("Error eliminando usuario:", error);
-    return res.status(error.status || 500).json({ mensaje: error.message });
+    res.status(500).json({ error: error.message });
   }
-}
+};
+
+export const loginUsuario = async (req, res) => {
+  try {
+    const { codUsuario, contraseña } = req.body;
+
+    const usuario = await usuarioService.obtenerUsuarioPorCodigoService(
+      codUsuario
+    );
+    if (!usuario)
+      return res.status(404).json({ mensaje: "Usuario no encontrado" });
+
+    const match = await bcrypt.compare(contraseña, usuario.contraseña);
+    if (!match)
+      return res.status(401).json({ mensaje: "Contraseña incorrecta" });
+
+    const token = jwt.sign(
+      { codUsuario: usuario.codUsuario, rol: usuario.rol },
+      JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+
+    res.json({ mensaje: "Login exitoso", token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: "Error interno del servidor" });
+  }
+};

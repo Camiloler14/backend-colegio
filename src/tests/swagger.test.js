@@ -1,18 +1,25 @@
-import request from "supertest";
-import express from "express";
-import { swaggerDocs } from "../docs/swagger.js";
+import { swaggerDocs } from "../docs/swagger.js"; 
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
 
-describe("Swagger Docs", () => {
-  let app;
+jest.mock("swagger-jsdoc");
+jest.mock("swagger-ui-express", () => ({
+  serve: jest.fn(),
+  setup: jest.fn(),
+}));
 
-  beforeAll(() => {
-    app = express();
+describe("swaggerDocs", () => {
+  it("debería configurar Swagger correctamente", () => {
+    const app = { use: jest.fn() };
+    swaggerJSDoc.mockReturnValue({ swagger: "doc" }); 
+
     swaggerDocs(app);
-  });
 
-  it("Debe responder con status 200 y contener HTML", async () => {
-    const res = await request(app).get("/api/docs/");
-    expect(res.status).toBe(200);
-    expect(res.text).toContain("<!DOCTYPE html>");
+    expect(swaggerJSDoc).toHaveBeenCalledTimes(1);
+    expect(app.use).toHaveBeenCalledWith(
+      "/api/docs",
+      swaggerUi.serve,
+      swaggerUi.setup({ swagger: "doc" })
+    );
   });
 });

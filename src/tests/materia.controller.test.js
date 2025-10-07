@@ -1,116 +1,129 @@
-import request from "supertest";
-import express from "express";
-import { MateriaController } from "../controllers/materia.controller.js";
+import * as materiaController from "../controllers/materia.controller.js";
+import MateriaService from "../services/materia.service.js";
 
-// Mock del servicio
-jest.mock("../services/materia.service.js", () => ({
-  MateriaService: {
-    crearMateria: jest.fn(),
-    listarMaterias: jest.fn(),
-    obtenerMateria: jest.fn(),
-    actualizarMateria: jest.fn(),
-    eliminarMateria: jest.fn(),
-  },
-}));
+describe("materia.controller", () => {
+  let req;
+  let res;
 
-import { MateriaService } from "../services/materia.service.js";
-
-// Configurar Express para testing
-const app = express();
-app.use(express.json());
-app.post("/materias", MateriaController.crear);
-app.get("/materias", MateriaController.listar);
-app.get("/materias/:id", MateriaController.obtener);
-app.put("/materias/:id", MateriaController.actualizar);
-app.delete("/materias/:id", MateriaController.eliminar);
-
-describe("MateriaController", () => {
   beforeEach(() => {
+    req = {};
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
     jest.clearAllMocks();
   });
 
-  test("Crear materia - éxito", async () => {
-    MateriaService.crearMateria.mockResolvedValue({ id: 1, nombre: "Matemáticas" });
+  it("crearMateria - éxito", async () => {
+    req.body = { nombre: "Matemáticas" };
+    const materiaMock = { codigoMateria: 1, nombre: "Matemáticas" };
+    jest.spyOn(MateriaService, "crearMateria").mockResolvedValue(materiaMock);
 
-    const res = await request(app)
-      .post("/materias")
-      .send({ nombre: "Matemáticas", codigo: "MAT101" });
+    await materiaController.crearMateria(req, res);
 
-    expect(res.statusCode).toBe(201);
-    expect(res.body).toHaveProperty("id", 1);
-    expect(res.body).toHaveProperty("nombre", "Matemáticas");
+    expect(MateriaService.crearMateria).toHaveBeenCalledWith(req.body);
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({
+      mensaje: "Materia creada correctamente",
+      materia: materiaMock,
+    });
   });
 
-  test("Listar materias - éxito", async () => {
-    MateriaService.listarMaterias.mockResolvedValue([
-      { id: 1, nombre: "Matemáticas" },
-      { id: 2, nombre: "Física" },
-    ]);
+  it("crearMateria - error", async () => {
+    const error = new Error("Error creación");
+    jest.spyOn(MateriaService, "crearMateria").mockRejectedValue(error);
 
-    const res = await request(app).get("/materias");
+    await materiaController.crearMateria(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toEqual([
-      { id: 1, nombre: "Matemáticas" },
-      { id: 2, nombre: "Física" },
-    ]);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
   });
 
-  test("Obtener materia - éxito", async () => {
-    MateriaService.obtenerMateria.mockResolvedValue({ id: 1, nombre: "Matemáticas" });
+  it("obtenerMaterias - éxito", async () => {
+    const materiasMock = [{ codigoMateria: 1, nombre: "Matemáticas" }];
+    jest.spyOn(MateriaService, "obtenerMaterias").mockResolvedValue(materiasMock);
 
-    const res = await request(app).get("/materias/1");
+    await materiaController.obtenerMaterias(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty("nombre", "Matemáticas");
+    expect(MateriaService.obtenerMaterias).toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith(materiasMock);
   });
 
-  test("Obtener materia - no encontrada", async () => {
-    MateriaService.obtenerMateria.mockResolvedValue(null);
+  it("obtenerMaterias - error", async () => {
+    const error = new Error("Error interno");
+    jest.spyOn(MateriaService, "obtenerMaterias").mockRejectedValue(error);
 
-    const res = await request(app).get("/materias/999");
+    await materiaController.obtenerMaterias(req, res);
 
-    expect(res.statusCode).toBe(404);
-    expect(res.body).toHaveProperty("mensaje", "Materia no encontrada");
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
   });
 
-  test("Actualizar materia - éxito", async () => {
-    MateriaService.actualizarMateria.mockResolvedValue({ id: 1, nombre: "Matemáticas Avanzadas" });
+  it("obtenerMateriaPorCodigo - éxito", async () => {
+    req.params = { codigoMateria: "1" };
+    const materiaMock = { codigoMateria: 1, nombre: "Matemáticas" };
+    jest.spyOn(MateriaService, "obtenerMateriaPorCodigo").mockResolvedValue(materiaMock);
 
-    const res = await request(app)
-      .put("/materias/1")
-      .send({ nombre: "Matemáticas Avanzadas" });
+    await materiaController.obtenerMateriaPorCodigo(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty("nombre", "Matemáticas Avanzadas");
+    expect(MateriaService.obtenerMateriaPorCodigo).toHaveBeenCalledWith("1");
+    expect(res.json).toHaveBeenCalledWith(materiaMock);
   });
 
-  test("Actualizar materia - no encontrada", async () => {
-    MateriaService.actualizarMateria.mockResolvedValue(null);
+  it("obtenerMateriaPorCodigo - error", async () => {
+    req.params = { codigoMateria: "1" };
+    const error = new Error("Materia no encontrada");
+    jest.spyOn(MateriaService, "obtenerMateriaPorCodigo").mockRejectedValue(error);
 
-    const res = await request(app)
-      .put("/materias/999")
-      .send({ nombre: "Desconocida" });
+    await materiaController.obtenerMateriaPorCodigo(req, res);
 
-    expect(res.statusCode).toBe(404);
-    expect(res.body).toHaveProperty("mensaje", "Materia no encontrada");
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
   });
 
-  test("Eliminar materia - éxito", async () => {
-    MateriaService.eliminarMateria.mockResolvedValue(true);
+  it("actualizarMateria - éxito", async () => {
+    req.params = { codigoMateria: "1" };
+    req.body = { nombre: "Física" };
+    const respuestaMock = { mensaje: "Materia actualizada" };
+    jest.spyOn(MateriaService, "actualizarMateria").mockResolvedValue(respuestaMock);
 
-    const res = await request(app).delete("/materias/1");
+    await materiaController.actualizarMateria(req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty("mensaje", "Materia eliminada correctamente");
+    expect(MateriaService.actualizarMateria).toHaveBeenCalledWith("1", req.body);
+    expect(res.json).toHaveBeenCalledWith(respuestaMock);
   });
 
-  test("Eliminar materia - no encontrada", async () => {
-    MateriaService.eliminarMateria.mockResolvedValue(false);
+  it("actualizarMateria - error", async () => {
+    req.params = { codigoMateria: "1" };
+    req.body = {};
+    const error = new Error("Error actualización");
+    jest.spyOn(MateriaService, "actualizarMateria").mockRejectedValue(error);
 
-    const res = await request(app).delete("/materias/999");
+    await materiaController.actualizarMateria(req, res);
 
-    expect(res.statusCode).toBe(404);
-    expect(res.body).toHaveProperty("mensaje", "Materia no encontrada");
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
+  });
+
+  it("eliminarMateria - éxito", async () => {
+    req.params = { codigoMateria: "1" };
+    const respuestaMock = { mensaje: "Materia eliminada" };
+    jest.spyOn(MateriaService, "eliminarMateria").mockResolvedValue(respuestaMock);
+
+    await materiaController.eliminarMateria(req, res);
+
+    expect(MateriaService.eliminarMateria).toHaveBeenCalledWith("1");
+    expect(res.json).toHaveBeenCalledWith(respuestaMock);
+  });
+
+  it("eliminarMateria - error", async () => {
+    req.params = { codigoMateria: "1" };
+    const error = new Error("Error eliminación");
+    jest.spyOn(MateriaService, "eliminarMateria").mockRejectedValue(error);
+
+    await materiaController.eliminarMateria(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
   });
 });

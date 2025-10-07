@@ -1,158 +1,60 @@
-import {
-  crearDocenteServicio,
-  obtenerDocentesServicio,
-  obtenerDocentePorDocumentoServicio,
-  actualizarDocenteServicio,
-  eliminarDocenteServicio,
-} from "../services/docente.service.js";
+import * as docenteService from "../services/docente.service.js";
 
-export async function crearDocente(req, res) {
-  const {
-    codigo,
-    primerNombre,
-    segundoNombre, // eslint-disable-line no-unused-vars
-    primerApellido,
-    segundoApellido, // eslint-disable-line no-unused-vars
-    email,
-    telefono,
-    direccion,
-    barrio,
-    ciudad,
-    fechaIngreso,
-    documento,
-  } = req.body;
-
-  if (
-    !codigo ||
-    !primerNombre ||
-    !primerApellido ||
-    !email ||
-    !telefono ||
-    !direccion ||
-    !barrio ||
-    !ciudad ||
-    !fechaIngreso ||
-    !documento
-  ) {
-    return res.status(400).json({ mensaje: "Faltan campos obligatorios" });
-  }
-
+export const crearDocente = async (req, res) => {
   try {
-    const result = await crearDocenteServicio(req.body);
-    if (!result.success) {
-      return res.status(400).json({ mensaje: result.message });
-    }
-
-    const docente = result.data.toJSON();
-
-    const nombres = [docente.primerNombre, docente.segundoNombre]
-      .filter(Boolean)
-      .join(" ");
-    const apellidos = [docente.primerApellido, docente.segundoApellido]
-      .filter(Boolean)
-      .join(" ");
-
-    const docenteConNombre = {
-      ...docente,
-      nombreCompleto: `${nombres} ${apellidos}`.replace(/\s+/g, " ").trim(),
-    };
-
-    return res.status(201).json(docenteConNombre);
+    const docente = await docenteService.crearDocenteService(req.body);
+    res.status(201).json(docente);
   } catch (error) {
     console.error("Error al crear docente:", error);
-    return res.status(500).json({ mensaje: "Error interno del servidor" });
+    res.status(500).json({ error: error.message });
   }
-}
+};
 
-export async function obtenerDocentes(req, res) {
+export const obtenerDocentePorCodigo = async (req, res) => {
   try {
-    const result = await obtenerDocentesServicio();
-    if (!result.success) {
-      return res.status(400).json({ mensaje: result.message });
-    }
-
-    const docentes = result.data.map((doc) => {
-      const d =
-        typeof doc.toJSON === "function" ? doc.toJSON() : doc.dataValues || doc;
-      const nombres = [d.primerNombre, d.segundoNombre]
-        .filter(Boolean)
-        .join(" ");
-      const apellidos = [d.primerApellido, d.segundoApellido]
-        .filter(Boolean)
-        .join(" ");
-
-      return {
-        ...d,
-        nombreCompleto: `${nombres} ${apellidos}`.replace(/\s+/g, " ").trim(),
-      };
-    });
-
-    return res.json(docentes);
-  } catch (error) {
-    console.error("Error al obtener docentes:", error);
-    return res.status(500).json({
-      mensaje: "Error interno del servidor",
-      error: error.message,
-    });
-  }
-}
-
-export async function obtenerDocente(req, res) {
-  try {
-    const result = await obtenerDocentePorDocumentoServicio(
-      req.params.documento
+    const docente = await docenteService.obtenerDocentePorCodigoService(
+      req.params.codDocente
     );
-    if (!result.success) {
-      return res.status(404).json({ mensaje: result.message });
-    }
-
-    const docente = result.data;
-    const docenteConNombre = {
-      ...docente.dataValues,
-      nombreCompleto: [
-        docente.primerNombre,
-        docente.segundoNombre,
-        docente.primerApellido,
-        docente.segundoApellido,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .replace(/\s+/g, " ")
-        .trim(),
-    };
-
-    return res.json(docenteConNombre);
+    if (!docente)
+      return res.status(404).json({ mensaje: "Docente no encontrado" });
+    res.json(docente);
   } catch (error) {
-    console.error("Error al obtener docente:", error);
-    return res.status(500).json({ mensaje: "Error interno del servidor" });
+    res.status(500).json({ error: error.message });
   }
-}
+};
 
-export async function actualizarDocente(req, res) {
+export const obtenerTodosDocentes = async (req, res) => {
   try {
-    const result = await actualizarDocenteServicio(
-      req.params.documento,
+    const docentes = await docenteService.obtenerTodosDocentesService();
+    res.json(docentes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const actualizarDocente = async (req, res) => {
+  try {
+    const docente = await docenteService.actualizarDocenteService(
+      req.params.codDocente,
       req.body
     );
-    if (!result.success) {
-      return res.status(404).json({ mensaje: result.message });
-    }
-    return res.json(result.data);
+    if (!docente)
+      return res.status(404).json({ mensaje: "Docente no encontrado" });
+    res.json({ mensaje: "Docente actualizado correctamente", docente });
   } catch (error) {
-    console.error("Error al actualizar docente:", error);
-    return res.status(500).json({ mensaje: "Error interno del servidor" });
+    res.status(500).json({ error: error.message });
   }
-}
+};
 
-export async function eliminarDocente(req, res) {
+export const eliminarDocente = async (req, res) => {
   try {
-    const result = await eliminarDocenteServicio(req.params.documento);
-    if (!result.success) {
-      return res.status(404).json({ mensaje: result.message });
-    }
-    return res.json({ mensaje: result.message });
+    const eliminado = await docenteService.eliminarDocenteService(
+      req.params.codDocente
+    );
+    if (!eliminado)
+      return res.status(404).json({ mensaje: "Docente no encontrado" });
+    res.json({ mensaje: "Docente eliminado correctamente" });
   } catch (error) {
-    console.error("Error al eliminar docente:", error);
-    return res.status(500).json({ mensaje: "Error interno del servidor" });
+    res.status(500).json({ error: error.message });
   }
-}
+};

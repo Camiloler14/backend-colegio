@@ -1,117 +1,116 @@
 import * as estudianteService from "../services/estudiante.service.js";
-import EstudianteRepository from "../repositories/estudiante.repository.js";
-import Usuario from "../models/usuario.model.js";
+import * as estudianteRepo from "../repositories/estudiante.repository.js";
+import { Usuario, Estudiante } from "../models/asociaciones.js";
 
 jest.mock("../repositories/estudiante.repository.js");
+jest.mock("../models/asociaciones.js");
 
-describe("EstudianteServicio", () => {
-  let findByPkSpy;
-  let createSpy;
+describe("Estudiante Service", () => {
+  const estudianteMock = { codEstudiante: "E001", nombre: "Juan" };
+  const usuarioMock = { codUsuario: "E001", rol: "estudiante" };
 
   beforeEach(() => {
-    // Limpia mocks antes de cada test
     jest.clearAllMocks();
-
-    // Espías para Usuario
-    findByPkSpy = jest.spyOn(Usuario, "findByPk");
-    createSpy = jest.spyOn(Usuario, "create");
   });
 
-  test("crearEstudianteService crea usuario y estudiante si no existe usuario", async () => {
-    const mockDatos = {
-      usuarioCodigo: "1001",
-      primerNombre: "Juan",
-      segundoNombre: "Carlos",
-      identificacion: "12345",
-    };
+  // Crear estudiante
+  test("crearEstudianteService crea un estudiante si el usuario existe y es estudiante", async () => {
+    Usuario.findOne.mockResolvedValue(usuarioMock);
+    estudianteRepo.crearEstudiante.mockResolvedValue(estudianteMock);
 
-    // Usuario no existe
-    findByPkSpy.mockResolvedValue(null);
+    const result = await estudianteService.crearEstudianteService(estudianteMock);
 
-    // Usuario creado
-    createSpy.mockResolvedValue({
-      codigo: "1001",
-      nombre: "Juan Carlos",
-      contraseña: "hashedPassword",
-    });
-
-    // Estudiante creado
-    EstudianteRepository.crear.mockResolvedValue({
-      identificacion: "12345",
-      primerNombre: "Juan",
-      segundoNombre: "Carlos",
-    });
-
-    const res = await estudianteService.crearEstudianteService(mockDatos);
-
-    expect(findByPkSpy).toHaveBeenCalledWith("1001");
-    expect(createSpy).toHaveBeenCalled();
-    expect(EstudianteRepository.crear).toHaveBeenCalledWith({
-      ...mockDatos,
-      usuarioCodigo: "1001",
-    });
-
-    expect(res.usuario.nombre).toBe("Juan Carlos");
-    expect(res.usuario.contraseña).toBe("******");
+    expect(Usuario.findOne).toHaveBeenCalledWith({ where: { codUsuario: "E001" } });
+    expect(estudianteRepo.crearEstudiante).toHaveBeenCalledWith(estudianteMock);
+    expect(result).toEqual(estudianteMock);
   });
 
-  test("obtenerEstudiantesService llama a Estudiante.findAll", async () => {
-    const estudiantesMock = [{ identificacion: "12345" }];
-    // No mockeamos Estudiante, solo controlamos el resultado si es necesario
-    // Alternativa: se puede usar spyOn si quieres mockear
-    const spy = jest.spyOn(
-      estudianteService,
-      "obtenerEstudiantesService"
-    );
-    spy.mockResolvedValue(estudiantesMock);
+  test("crearEstudianteService lanza error si usuario no existe", async () => {
+    Usuario.findOne.mockResolvedValue(null);
 
-    const res = await estudianteService.obtenerEstudiantesService();
-    expect(res).toEqual(estudiantesMock);
-    spy.mockRestore();
+    await expect(estudianteService.crearEstudianteService(estudianteMock))
+      .rejects.toThrow("El usuario no existe. Crea primero el usuario.");
   });
 
-  test("obtenerEstudiantePorIdentificacionService llama a Estudiante.findOne", async () => {
-    const estudianteMock = { identificacion: "12345" };
-    const spy = jest.spyOn(
-      estudianteService,
-      "obtenerEstudiantePorIdentificacionService"
-    );
-    spy.mockResolvedValue(estudianteMock);
+  test("crearEstudianteService lanza error si usuario no es estudiante", async () => {
+    Usuario.findOne.mockResolvedValue({ ...usuarioMock, rol: "docente" });
 
-    const res = await estudianteService.obtenerEstudiantePorIdentificacionService(
-      "12345"
-    );
-    expect(res).toEqual(estudianteMock);
-    spy.mockRestore();
+    await expect(estudianteService.crearEstudianteService(estudianteMock))
+      .rejects.toThrow("El usuario no tiene rol de estudiante.");
   });
 
-  test("actualizarEstudianteService llama a actualizarPorIdentificacion", async () => {
-    const estudianteMock = { identificacion: "12345", primerNombre: "Juan" };
-    EstudianteRepository.actualizarPorIdentificacion.mockResolvedValue(
-      estudianteMock
-    );
+  // Obtener todos los estudiantes
+  test("obtenerTodosEstudiantesService devuelve estudiantes con usuario", async () => {
+    Estudiante.findAll.mockResolvedValue([estudianteMock]);
 
-    const res = await estudianteService.actualizarEstudianteService("12345", {
-      primerNombre: "Juan",
-    });
+    const result = await estudianteService.obtenerTodosEstudiantesService();
 
-    expect(EstudianteRepository.actualizarPorIdentificacion).toHaveBeenCalledWith(
-      "12345",
-      { primerNombre: "Juan" }
-    );
-    expect(res).toEqual(estudianteMock);
+    expect(Estudiante.findAll).toHaveBeenCalledWith({ include: [{ model: Usuario, as: "usuario" }] });
+    expect(result).toEqual([estudianteMock]);
   });
 
-  test("eliminarEstudianteService llama a eliminarPorIdentificacion", async () => {
-    EstudianteRepository.eliminarPorIdentificacion.mockResolvedValue({
-      success: true,
-    });
+  // Obtener estudiante por código
+  test("obtenerEstudiantePorCodigoService devuelve estudiante si existe", async () => {
+    Estudiante.findByPk.mockResolvedValue(estudianteMock);
 
-    const res = await estudianteService.eliminarEstudianteService("12345");
+    const result = await estudianteService.obtenerEstudiantePorCodigoService("E001");
 
-    expect(EstudianteRepository.eliminarPorIdentificacion).toHaveBeenCalledWith(
-      "12345"
-    );
-    expect(res).toBe(true);
+    expect(Estudiante.findByPk).toHaveBeenCalledWith("E001", { include: [{ model: Usuario, as: "usuario" }] });
+    expect(result).toEqual(estudianteMock);
+  });
+
+  test("obtenerEstudiantePorCodigoService lanza error si no existe", async () => {
+    Estudiante.findByPk.mockResolvedValue(null);
+
+    await expect(estudianteService.obtenerEstudiantePorCodigoService("E001"))
+      .rejects.toThrow("Estudiante no encontrado");
+  });
+
+  // Actualizar estudiante
+  test("actualizarEstudianteService actualiza estudiante correctamente", async () => {
+    Usuario.findOne.mockResolvedValue(usuarioMock);
+    estudianteRepo.actualizarEstudiante.mockResolvedValue([1]); // Sequelize update devuelve [affectedRows]
+
+    const result = await estudianteService.actualizarEstudianteService("E001", { nombre: "Pedro" });
+
+    expect(result).toEqual([1]);
+  });
+
+  test("actualizarEstudianteService lanza error si usuario no existe", async () => {
+    Usuario.findOne.mockResolvedValue(null);
+
+    await expect(estudianteService.actualizarEstudianteService("E001", { nombre: "Pedro" }))
+      .rejects.toThrow("El usuario asignado no existe.");
+  });
+
+  test("actualizarEstudianteService lanza error si usuario no es estudiante", async () => {
+    Usuario.findOne.mockResolvedValue({ ...usuarioMock, rol: "docente" });
+
+    await expect(estudianteService.actualizarEstudianteService("E001", { nombre: "Pedro" }))
+      .rejects.toThrow("El usuario no tiene rol de estudiante.");
+  });
+
+  test("actualizarEstudianteService lanza error si estudiante no existe", async () => {
+    Usuario.findOne.mockResolvedValue(usuarioMock);
+    estudianteRepo.actualizarEstudiante.mockResolvedValue([0]);
+
+    await expect(estudianteService.actualizarEstudianteService("E001", { nombre: "Pedro" }))
+      .rejects.toThrow("Estudiante no encontrado.");
+  });
+
+  // Eliminar estudiante
+  test("eliminarEstudianteService elimina correctamente", async () => {
+    estudianteRepo.eliminarEstudiante.mockResolvedValue(true);
+
+    const result = await estudianteService.eliminarEstudianteService("E001");
+
+    expect(result).toBe(true);
+  });
+
+  test("eliminarEstudianteService lanza error si estudiante no existe", async () => {
+    estudianteRepo.eliminarEstudiante.mockResolvedValue(false);
+
+    await expect(estudianteService.eliminarEstudianteService("E001"))
+      .rejects.toThrow("Estudiante no encontrado.");
   });
 });

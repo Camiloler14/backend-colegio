@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { EstudianteMateriaController } from "../controllers/estudianteMateria.controller.js";
-import { verificarToken } from "../middlewares/usuario.middleware.js";
+import { verificarToken } from "../middlewares/verificarToken.js";
 
 const router = Router();
 

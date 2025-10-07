@@ -1,60 +1,93 @@
-import { MateriaService } from "../services/materia.service.js";
-import { MateriaRepository } from "../repositories/materia.repository.js";
+import MateriaService from "../services/materia.service.js";
+import MateriaRepository from "../repositories/materia.repository.js";
 
 jest.mock("../repositories/materia.repository.js");
 
 describe("MateriaService", () => {
+  const materiaMock = { codigoMateria: "M001", nombre: "Matemáticas" };
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  test("crearMateria llama a MateriaRepository.crear", async () => {
-    const datos = { nombre: "Matemáticas" };
-    MateriaRepository.crear.mockResolvedValue({ id: 1, ...datos });
+  test("crearMateria crea una materia si no existe", async () => {
+    MateriaRepository.obtenerMateriaPorCodigo.mockResolvedValue(null);
+    MateriaRepository.crearMateria.mockResolvedValue(materiaMock);
 
-    const res = await MateriaService.crearMateria(datos);
+    const result = await MateriaService.crearMateria(materiaMock);
 
-    expect(MateriaRepository.crear).toHaveBeenCalledWith(datos);
-    expect(res).toEqual({ id: 1, ...datos });
+    expect(MateriaRepository.obtenerMateriaPorCodigo).toHaveBeenCalledWith("M001");
+    expect(MateriaRepository.crearMateria).toHaveBeenCalledWith(materiaMock);
+    expect(result).toEqual(materiaMock);
   });
 
-  test("listarMaterias llama a MateriaRepository.obtenerTodas", async () => {
-    const materiasMock = [{ id: 1, nombre: "Matemáticas" }];
-    MateriaRepository.obtenerTodas.mockResolvedValue(materiasMock);
+  test("crearMateria lanza error si la materia ya existe", async () => {
+    MateriaRepository.obtenerMateriaPorCodigo.mockResolvedValue(materiaMock);
 
-    const res = await MateriaService.listarMaterias();
-
-    expect(MateriaRepository.obtenerTodas).toHaveBeenCalled();
-    expect(res).toEqual(materiasMock);
+    await expect(MateriaService.crearMateria(materiaMock))
+      .rejects
+      .toThrow("La materia ya existe");
   });
 
-  test("obtenerMateria llama a MateriaRepository.obtenerPorId", async () => {
-    const materiaMock = { id: 1, nombre: "Matemáticas" };
-    MateriaRepository.obtenerPorId.mockResolvedValue(materiaMock);
+  test("obtenerMaterias devuelve todas las materias", async () => {
+    MateriaRepository.obtenerMaterias.mockResolvedValue([materiaMock]);
 
-    const res = await MateriaService.obtenerMateria(1);
+    const result = await MateriaService.obtenerMaterias();
 
-    expect(MateriaRepository.obtenerPorId).toHaveBeenCalledWith(1);
-    expect(res).toEqual(materiaMock);
+    expect(MateriaRepository.obtenerMaterias).toHaveBeenCalled();
+    expect(result).toEqual([materiaMock]);
   });
 
-  test("actualizarMateria llama a MateriaRepository.actualizar", async () => {
-    const datos = { nombre: "Física" };
-    const updatedMock = { id: 1, nombre: "Física" };
-    MateriaRepository.actualizar.mockResolvedValue(updatedMock);
+  test("obtenerMateriaPorCodigo devuelve la materia si existe", async () => {
+    MateriaRepository.obtenerMateriaPorCodigo.mockResolvedValue(materiaMock);
 
-    const res = await MateriaService.actualizarMateria(1, datos);
+    const result = await MateriaService.obtenerMateriaPorCodigo("M001");
 
-    expect(MateriaRepository.actualizar).toHaveBeenCalledWith(1, datos);
-    expect(res).toEqual(updatedMock);
+    expect(MateriaRepository.obtenerMateriaPorCodigo).toHaveBeenCalledWith("M001");
+    expect(result).toEqual(materiaMock);
   });
 
-  test("eliminarMateria llama a MateriaRepository.eliminar", async () => {
-    MateriaRepository.eliminar.mockResolvedValue(true);
+  test("obtenerMateriaPorCodigo lanza error si no existe", async () => {
+    MateriaRepository.obtenerMateriaPorCodigo.mockResolvedValue(null);
 
-    const res = await MateriaService.eliminarMateria(1);
+    await expect(MateriaService.obtenerMateriaPorCodigo("M001"))
+      .rejects
+      .toThrow("Materia no encontrada");
+  });
 
-    expect(MateriaRepository.eliminar).toHaveBeenCalledWith(1);
-    expect(res).toBe(true);
+  test("actualizarMateria actualiza la materia si existe", async () => {
+    MateriaRepository.obtenerMateriaPorCodigo.mockResolvedValue(materiaMock);
+    MateriaRepository.actualizarMateria.mockResolvedValue([1]);
+
+    const result = await MateriaService.actualizarMateria("M001", { nombre: "Fisica" });
+
+    expect(MateriaRepository.actualizarMateria).toHaveBeenCalledWith("M001", { nombre: "Fisica" });
+    expect(result).toEqual({ mensaje: "Materia actualizada correctamente" });
+  });
+
+  test("actualizarMateria lanza error si no existe", async () => {
+    MateriaRepository.obtenerMateriaPorCodigo.mockResolvedValue(null);
+
+    await expect(MateriaService.actualizarMateria("M001", {}))
+      .rejects
+      .toThrow("Materia no encontrada");
+  });
+
+  test("eliminarMateria elimina la materia si existe", async () => {
+    MateriaRepository.obtenerMateriaPorCodigo.mockResolvedValue(materiaMock);
+    MateriaRepository.eliminarMateria.mockResolvedValue(1);
+
+    const result = await MateriaService.eliminarMateria("M001");
+
+    expect(MateriaRepository.eliminarMateria).toHaveBeenCalledWith("M001");
+    expect(result).toEqual({ mensaje: "Materia eliminada correctamente" });
+  });
+
+  test("eliminarMateria lanza error si no existe", async () => {
+    MateriaRepository.obtenerMateriaPorCodigo.mockResolvedValue(null);
+
+    await expect(MateriaService.eliminarMateria("M001"))
+      .rejects
+      .toThrow("Materia no encontrada");
   });
 });

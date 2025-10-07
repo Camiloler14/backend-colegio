@@ -1,89 +1,83 @@
-jest.mock("../models/usuario.model.js", () => ({
-  findOne: jest.fn(),
-  findAll: jest.fn(),
-  create: jest.fn(),
-  update: jest.fn(),
-  destroy: jest.fn(),
-}));
-
-import UsuarioRepositorio from "../repositories/usuario.repository.js";
+import * as UsuarioRepository from "../repositories/usuario.repository.js";
 import Usuario from "../models/usuario.model.js";
 
-describe("UsuarioRepositorio", () => {
-  beforeEach(() => {
+jest.mock("../models/usuario.model.js");
+
+describe("UsuarioRepository", () => {
+  const usuarioMock = {
+    codUsuario: "U123",
+    nombre: "Juan",
+    rol: "estudiante",
+    contraseña: "hashedpass",
+    toJSON: function () { return { codUsuario: this.codUsuario, nombre: this.nombre, rol: this.rol }; }
+  };
+
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("buscarPorCodigo", () => {
-    it("debería devolver un usuario existente", async () => {
-      const usuarioMock = { codigo: "U1", nombre: "Juan" };
-      Usuario.findOne.mockResolvedValue(usuarioMock);
+  test("crearUsuario crea un nuevo usuario", async () => {
+    Usuario.create.mockResolvedValue(usuarioMock);
 
-      const result = await UsuarioRepositorio.buscarPorCodigo("U1");
+    const result = await UsuarioRepository.crearUsuario(usuarioMock);
 
-      expect(Usuario.findOne).toHaveBeenCalledWith({ where: { codigo: "U1" } });
-      expect(result).toEqual(usuarioMock);
-    });
+    expect(Usuario.create).toHaveBeenCalledWith(usuarioMock);
+    expect(result).toEqual(usuarioMock);
   });
 
-  describe("obtenerTodos", () => {
-    it("debería devolver todos los usuarios", async () => {
-      const usuariosMock = [{ codigo: "U1" }, { codigo: "U2" }];
-      Usuario.findAll.mockResolvedValue(usuariosMock);
+  test("obtenerUsuarioPorCodigo retorna un usuario por código", async () => {
+    Usuario.findOne.mockResolvedValue(usuarioMock);
 
-      const result = await UsuarioRepositorio.obtenerTodos();
+    const result = await UsuarioRepository.obtenerUsuarioPorCodigo("U123");
 
-      expect(Usuario.findAll).toHaveBeenCalled();
-      expect(result).toEqual(usuariosMock);
-    });
+    expect(Usuario.findOne).toHaveBeenCalledWith({ where: { codUsuario: "U123" } });
+    expect(result).toEqual(usuarioMock);
   });
 
-  describe("crear", () => {
-    it("debería crear un usuario", async () => {
-      const datos = { codigo: "U1", nombre: "Juan" };
-      Usuario.create.mockResolvedValue(datos);
+  test("obtenerTodosUsuarios retorna todos los usuarios excluyendo contraseña", async () => {
+    Usuario.findAll.mockResolvedValue([usuarioMock]);
 
-      const result = await UsuarioRepositorio.crear(datos);
+    const result = await UsuarioRepository.obtenerTodosUsuarios();
 
-      expect(Usuario.create).toHaveBeenCalledWith(datos);
-      expect(result).toEqual(datos);
-    });
+    expect(Usuario.findAll).toHaveBeenCalledWith({ attributes: { exclude: ["contraseña"] } });
+    expect(result).toEqual([usuarioMock]);
   });
 
-  describe("actualizar", () => {
-    it("debería actualizar un usuario existente", async () => {
-      Usuario.update.mockResolvedValue([1]); // 1 fila editada
-      Usuario.findOne.mockResolvedValue({ codigo: "U1", nombre: "Carlos" });
+  test("actualizarUsuario actualiza un usuario existente", async () => {
+    Usuario.findByPk.mockResolvedValue(usuarioMock);
+    usuarioMock.save = jest.fn().mockResolvedValue(usuarioMock);
 
-      const result = await UsuarioRepositorio.actualizar("U1", { nombre: "Carlos" });
+    const result = await UsuarioRepository.actualizarUsuario("U123", { nombre: "Pedro", rol: "docente" });
 
-      expect(Usuario.update).toHaveBeenCalledWith({ nombre: "Carlos" }, { where: { codigo: "U1" } });
-      expect(result).toEqual({ codigo: "U1", nombre: "Carlos" });
-    });
-
-    it("debería lanzar error si no encuentra usuario", async () => {
-      Usuario.update.mockResolvedValue([0]); // ninguna fila editada
-
-      await expect(
-        UsuarioRepositorio.actualizar("U999", { nombre: "Carlos" })
-      ).rejects.toThrow("Usuario no encontrado");
-    });
+    expect(Usuario.findByPk).toHaveBeenCalledWith("U123");
+    expect(usuarioMock.save).toHaveBeenCalled();
+    expect(result).toEqual({ codUsuario: "U123", nombre: "Pedro", rol: "docente" });
   });
 
-  describe("eliminar", () => {
-    it("debería eliminar un usuario existente", async () => {
-      Usuario.destroy.mockResolvedValue(1);
+  test("actualizarUsuario retorna null si el usuario no existe", async () => {
+    Usuario.findByPk.mockResolvedValue(null);
 
-      const result = await UsuarioRepositorio.eliminar("U1");
+    const result = await UsuarioRepository.actualizarUsuario("NOEXISTE", { nombre: "Pedro" });
 
-      expect(Usuario.destroy).toHaveBeenCalledWith({ where: { codigo: "U1" } });
-      expect(result).toBe(true);
-    });
+    expect(result).toBeNull();
+  });
 
-    it("debería lanzar error si no encuentra usuario", async () => {
-      Usuario.destroy.mockResolvedValue(0);
+  test("eliminarUsuario elimina un usuario existente", async () => {
+    Usuario.findByPk.mockResolvedValue(usuarioMock);
+    usuarioMock.destroy = jest.fn().mockResolvedValue(usuarioMock);
 
-      await expect(UsuarioRepositorio.eliminar("U999")).rejects.toThrow("Usuario no encontrado");
-    });
+    const result = await UsuarioRepository.eliminarUsuario("U123");
+
+    expect(Usuario.findByPk).toHaveBeenCalledWith("U123");
+    expect(usuarioMock.destroy).toHaveBeenCalled();
+    expect(result).toEqual(usuarioMock);
+  });
+
+  test("eliminarUsuario retorna null si el usuario no existe", async () => {
+    Usuario.findByPk.mockResolvedValue(null);
+
+    const result = await UsuarioRepository.eliminarUsuario("NOEXISTE");
+
+    expect(result).toBeNull();
   });
 });

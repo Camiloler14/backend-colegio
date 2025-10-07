@@ -1,96 +1,55 @@
-import bcrypt from "bcryptjs";
-import EstudianteRepository from "../repositories/estudiante.repository.js";
-import Usuario from "../models/usuario.model.js";
-import Estudiante from "../models/estudiante.model.js";
+import * as estudianteRepo from "../repositories/estudiante.repository.js";
+import { Usuario, Estudiante } from "../models/asociaciones.js"; 
 
-export async function crearEstudianteService(data) {
-  try {
-    if (!data.usuarioCodigo) {
-      throw new Error("El código del usuario es obligatorio");
-    }
+// Crear estudiante
+export const crearEstudianteService = async (data) => {
+  const usuario = await Usuario.findOne({
+    where: { codUsuario: data.codEstudiante },
+  });
 
-    let usuario = await Usuario.findByPk(data.usuarioCodigo);
+  if (!usuario)
+    throw new Error("El usuario no existe. Crea primero el usuario.");
+  if (usuario.rol !== "estudiante")
+    throw new Error("El usuario no tiene rol de estudiante.");
 
-    if (!usuario) {
-      const contraseñaPorDefecto = "12345";
-      const hashedPassword = await bcrypt.hash(contraseñaPorDefecto, 10);
+  return await estudianteRepo.crearEstudiante(data);
+};
 
-      usuario = await Usuario.create({
-        codigo: data.usuarioCodigo,
-        nombre:
-          data.primerNombre +
-          (data.segundoNombre ? " " + data.segundoNombre : ""),
-        contraseña: hashedPassword,
-        rol: "estudiante",
-      });
-    }
+// Obtener todos los estudiantes con su usuario asociado
+export const obtenerTodosEstudiantesService = async () => {
+  return await Estudiante.findAll({
+    include: [{ model: Usuario, as: "usuario" }],
+  });
+};
 
-    data.usuarioCodigo = usuario.codigo;
+// Obtener estudiante por código con su usuario
+export const obtenerEstudiantePorCodigoService = async (codEstudiante) => {
+  const estudiante = await Estudiante.findByPk(codEstudiante, {
+    include: [{ model: Usuario, as: "usuario" }],
+  });
 
-    const estudiante = await EstudianteRepository.crear(data);
+  if (!estudiante) throw new Error("Estudiante no encontrado");
+  return estudiante;
+};
 
-    return {
-      estudiante,
-      usuario: {
-        codigo: usuario.codigo,
-        nombre: usuario.nombre,
-        contraseña: "******",
-      },
-    };
-  } catch (error) {
-    throw new Error("Error creando estudiante: " + error.message);
-  }
-}
+// Actualizar estudiante
+export const actualizarEstudianteService = async (codEstudiante, data) => {
+  const usuario = await Usuario.findOne({
+    where: { codUsuario: codEstudiante },
+  });
 
-export async function actualizarEstudianteService(identificacion, data) {
-  try {
-    const estudiante = await EstudianteRepository.actualizarPorIdentificacion(
-      identificacion,
-      data
-    );
-    return estudiante;
-  } catch (error) {
-    throw new Error("Error actualizando estudiante: " + error.message);
-  }
-}
+  if (!usuario) throw new Error("El usuario asignado no existe.");
+  if (usuario.rol !== "estudiante")
+    throw new Error("El usuario no tiene rol de estudiante.");
 
-export async function eliminarEstudianteService(identificacion) {
-  try {
-    const result = await EstudianteRepository.eliminarPorIdentificacion(
-      identificacion
-    );
-    if (!result.success) return false;
+  const result = await estudianteRepo.actualizarEstudiante(codEstudiante, data);
+  if (result[0] === 0) throw new Error("Estudiante no encontrado.");
+  return result;
+};
 
-    return true;
-  } catch (error) {
-    throw new Error("Error eliminando estudiante: " + error.message);
-  }
-}
-
-export async function obtenerEstudiantesService() {
-  try {
-    const estudiantes = await Estudiante.findAll({
-      include: { model: Usuario, as: "usuario" },
-      order: [["primerNombre", "ASC"]],
-    });
-
-    return estudiantes;
-  } catch (error) {
-    throw new Error("Error obteniendo estudiantes: " + error.message);
-  }
-}
-
-export async function obtenerEstudiantePorIdentificacionService(
-  identificacion
-) {
-  try {
-    const estudiante = await Estudiante.findOne({
-      where: { identificacion },
-      include: { model: Usuario, as: "usuario" },
-    });
-
-    return estudiante;
-  } catch (error) {
-    throw new Error("Error obteniendo estudiante: " + error.message);
-  }
-}
+// Eliminar estudiante
+export const eliminarEstudianteService = async (codEstudiante) => {
+  const deleted = await estudianteRepo.eliminarEstudiante(codEstudiante);
+  if (!deleted) throw new Error("Estudiante no encontrado.");
+  return deleted;
+};

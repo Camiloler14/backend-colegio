@@ -16,10 +16,10 @@ const options = {
     ],
   },
  apis: [
-  './src/routes/usuario.route.js',
-  './src/routes/estudiante.route.js',
-  './src/routes/docente.route.js',
-  './src/routes/subject.routes.js'
+  './src/routes/usuario.routes.js',
+  './src/routes/estudiante.routes.js',
+  './src/routes/docente.routes.js',
+  './src/routes/materia.routes.js'
 ],
 };
 

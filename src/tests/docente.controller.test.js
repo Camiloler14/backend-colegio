@@ -1,239 +1,155 @@
-import request from "supertest";
-import express from "express";
-import {
-  crearDocente,
-  obtenerDocentes,
-  obtenerDocente,
-  actualizarDocente,
-  eliminarDocente,
-} from "../controllers/docente.controller.js";
+import * as docenteController from "../controllers/docente.controller.js";
+import * as docenteService from "../services/docente.service.js";
 
-import {
-  crearDocenteServicio,
-  obtenerDocentesServicio,
-  obtenerDocentePorDocumentoServicio,
-  actualizarDocenteServicio,
-  eliminarDocenteServicio,
-} from "../services/docente.service.js";
+describe("docente.controller", () => {
+  let req;
+  let res;
 
-jest.mock("../services/docente.service.js");
-
-const app = express();
-app.use(express.json());
-
-app.post("/docentes", crearDocente);
-app.get("/docentes", obtenerDocentes);
-app.get("/docentes/:documento", obtenerDocente);
-app.put("/docentes/:documento", actualizarDocente);
-app.delete("/docentes/:documento", eliminarDocente);
-
-describe("Controlador de docentes", () => {
   beforeEach(() => {
+    req = {};
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
     jest.clearAllMocks();
   });
 
-  describe("POST /docentes", () => {
-    const docenteData = {
-      codigo: "DOC001",
-      primerNombre: "Juan",
-      segundoNombre: "Camilo",
-      primerApellido: "Lerma",
-      segundoApellido: "Balanta",
-      email: "juan@example.com",
-      telefono: "3101234567",
-      direccion: "Calle 123",
-      barrio: "La Gran Colombia",
-      ciudad: "Cali",
-      fechaIngreso: "2025-10-05",
-      documento: "123456789",
-    };
+  it("crearDocente - éxito", async () => {
+    req.body = { nombre: "Juan" };
+    const docenteMock = { codDocente: 1, nombre: "Juan" };
+    jest.spyOn(docenteService, "crearDocenteService").mockResolvedValue(docenteMock);
 
-    it("debe crear un docente exitosamente", async () => {
-      crearDocenteServicio.mockResolvedValue({
-        success: true,
-        data: { toJSON: () => docenteData },
-      });
+    await docenteController.crearDocente(req, res);
 
-      const res = await request(app).post("/docentes").send(docenteData);
+    expect(docenteService.crearDocenteService).toHaveBeenCalledWith(req.body);
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(docenteMock);
+  });
 
-      expect(res.status).toBe(201);
-      expect(res.body.nombreCompleto).toBe("Juan Camilo Lerma Balanta");
-      expect(crearDocenteServicio).toHaveBeenCalledWith(docenteData);
-    });
+  it("crearDocente - error", async () => {
+    const error = new Error("Error interno");
+    jest.spyOn(docenteService, "crearDocenteService").mockRejectedValue(error);
 
-    it("debe devolver error 400 si faltan campos obligatorios", async () => {
-      const res = await request(app).post("/docentes").send({
-        primerNombre: "Juan",
-      });
-      expect(res.status).toBe(400);
-      expect(res.body.mensaje).toBe("Faltan campos obligatorios");
-    });
+    await docenteController.crearDocente(req, res);
 
-    it("debe devolver error si el servicio falla", async () => {
-      crearDocenteServicio.mockResolvedValue({
-        success: false,
-        message: "Docente ya existe",
-      });
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
+  });
 
-      const res = await request(app).post("/docentes").send(docenteData);
+  it("obtenerDocentePorCodigo - éxito", async () => {
+    req.params = { codDocente: "1" };
+    const docenteMock = { codDocente: 1, nombre: "Juan" };
+    jest.spyOn(docenteService, "obtenerDocentePorCodigoService").mockResolvedValue(docenteMock);
 
-      expect(res.status).toBe(400);
-      expect(res.body.mensaje).toBe("Docente ya existe");
-    });
+    await docenteController.obtenerDocentePorCodigo(req, res);
 
-    it("debe manejar errores internos del servidor", async () => {
-      crearDocenteServicio.mockRejectedValue(new Error("DB error"));
-      const res = await request(app).post("/docentes").send(docenteData);
-      expect(res.status).toBe(500);
-      expect(res.body.mensaje).toBe("Error interno del servidor");
+    expect(res.json).toHaveBeenCalledWith(docenteMock);
+  });
+
+  it("obtenerDocentePorCodigo - no encontrado", async () => {
+    req.params = { codDocente: "1" };
+    jest.spyOn(docenteService, "obtenerDocentePorCodigoService").mockResolvedValue(null);
+
+    await docenteController.obtenerDocentePorCodigo(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Docente no encontrado" });
+  });
+
+  it("obtenerDocentePorCodigo - error", async () => {
+    req.params = { codDocente: "1" };
+    const error = new Error("Error interno");
+    jest.spyOn(docenteService, "obtenerDocentePorCodigoService").mockRejectedValue(error);
+
+    await docenteController.obtenerDocentePorCodigo(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
+  });
+
+  it("obtenerTodosDocentes - éxito", async () => {
+    const docentesMock = [{ codDocente: 1, nombre: "Juan" }];
+    jest.spyOn(docenteService, "obtenerTodosDocentesService").mockResolvedValue(docentesMock);
+
+    await docenteController.obtenerTodosDocentes(req, res);
+
+    expect(res.json).toHaveBeenCalledWith(docentesMock);
+  });
+
+  it("obtenerTodosDocentes - error", async () => {
+    const error = new Error("Error interno");
+    jest.spyOn(docenteService, "obtenerTodosDocentesService").mockRejectedValue(error);
+
+    await docenteController.obtenerTodosDocentes(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
+  });
+
+  it("actualizarDocente - éxito", async () => {
+    req.params = { codDocente: "1" };
+    req.body = { nombre: "Juan" };
+    const docenteMock = { codDocente: 1, nombre: "Juan" };
+    jest.spyOn(docenteService, "actualizarDocenteService").mockResolvedValue(docenteMock);
+
+    await docenteController.actualizarDocente(req, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      mensaje: "Docente actualizado correctamente",
+      docente: docenteMock,
     });
   });
 
-  describe("GET /docentes", () => {
-    it("debe retornar una lista de docentes con nombre completo", async () => {
-      obtenerDocentesServicio.mockResolvedValue({
-        success: true,
-        data: [
-          {
-            toJSON: () => ({
-              primerNombre: "María",
-              segundoNombre: "Lucía",
-              primerApellido: "Gómez",
-              segundoApellido: "Ríos",
-            }),
-          },
-        ],
-      });
+  it("actualizarDocente - no encontrado", async () => {
+    req.params = { codDocente: "1" };
+    req.body = {};
+    jest.spyOn(docenteService, "actualizarDocenteService").mockResolvedValue(null);
 
-      const res = await request(app).get("/docentes");
-      expect(res.status).toBe(200);
-      expect(res.body[0].nombreCompleto).toBe("María Lucía Gómez Ríos");
-    });
+    await docenteController.actualizarDocente(req, res);
 
-    it("debe devolver error 400 si el servicio falla", async () => {
-      obtenerDocentesServicio.mockResolvedValue({
-        success: false,
-        message: "Error al obtener docentes",
-      });
-
-      const res = await request(app).get("/docentes");
-      expect(res.status).toBe(400);
-      expect(res.body.mensaje).toBe("Error al obtener docentes");
-    });
-
-    it("debe manejar errores internos del servidor", async () => {
-      obtenerDocentesServicio.mockRejectedValue(new Error("DB error"));
-      const res = await request(app).get("/docentes");
-      expect(res.status).toBe(500);
-      expect(res.body.mensaje).toBe("Error interno del servidor");
-    });
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Docente no encontrado" });
   });
 
-  describe("GET /docentes/:documento", () => {
-    it("debe retornar un docente por documento", async () => {
-      obtenerDocentePorDocumentoServicio.mockResolvedValue({
-        success: true,
-        data: {
-          primerNombre: "Juan",
-          primerApellido: "Lerma",
-          dataValues: { primerNombre: "Juan", primerApellido: "Lerma" },
-        },
-      });
+  it("actualizarDocente - error", async () => {
+    req.params = { codDocente: "1" };
+    req.body = {};
+    const error = new Error("Error interno");
+    jest.spyOn(docenteService, "actualizarDocenteService").mockRejectedValue(error);
 
-      const res = await request(app).get("/docentes/123456789");
-      expect(res.status).toBe(200);
-      expect(res.body.nombreCompleto).toContain("Juan Lerma");
-    });
+    await docenteController.actualizarDocente(req, res);
 
-    it("debe retornar 404 si el docente no existe", async () => {
-      obtenerDocentePorDocumentoServicio.mockResolvedValue({
-        success: false,
-        message: "Docente no encontrado",
-      });
-
-      const res = await request(app).get("/docentes/0000000");
-      expect(res.status).toBe(404);
-      expect(res.body.mensaje).toBe("Docente no encontrado");
-    });
-
-    it("debe manejar errores internos", async () => {
-      obtenerDocentePorDocumentoServicio.mockRejectedValue(
-        new Error("Error DB")
-      );
-      const res = await request(app).get("/docentes/123456789");
-      expect(res.status).toBe(500);
-      expect(res.body.mensaje).toBe("Error interno del servidor");
-    });
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
   });
 
-  describe("PUT /docentes/:documento", () => {
-    it("debe actualizar un docente correctamente", async () => {
-      actualizarDocenteServicio.mockResolvedValue({
-        success: true,
-        data: { mensaje: "Docente actualizado" },
-      });
+  it("eliminarDocente - éxito", async () => {
+    req.params = { codDocente: "1" };
+    jest.spyOn(docenteService, "eliminarDocenteService").mockResolvedValue(true);
 
-      const res = await request(app)
-        .put("/docentes/123456789")
-        .send({ telefono: "3009999999" });
+    await docenteController.eliminarDocente(req, res);
 
-      expect(res.status).toBe(200);
-      expect(res.body.mensaje).toBe("Docente actualizado");
-    });
-
-    it("debe devolver 404 si el docente no se encuentra", async () => {
-      actualizarDocenteServicio.mockResolvedValue({
-        success: false,
-        message: "Docente no encontrado",
-      });
-
-      const res = await request(app)
-        .put("/docentes/0000000")
-        .send({ telefono: "3009999999" });
-
-      expect(res.status).toBe(404);
-      expect(res.body.mensaje).toBe("Docente no encontrado");
-    });
-
-    it("debe manejar errores internos", async () => {
-      actualizarDocenteServicio.mockRejectedValue(new Error("DB error"));
-      const res = await request(app)
-        .put("/docentes/123456789")
-        .send({ telefono: "3009999999" });
-
-      expect(res.status).toBe(500);
-      expect(res.body.mensaje).toBe("Error interno del servidor");
-    });
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Docente eliminado correctamente" });
   });
 
-  describe("DELETE /docentes/:documento", () => {
-    it("debe eliminar un docente correctamente", async () => {
-      eliminarDocenteServicio.mockResolvedValue({
-        success: true,
-        message: "Docente eliminado correctamente",
-      });
+  it("eliminarDocente - no encontrado", async () => {
+    req.params = { codDocente: "1" };
+    jest.spyOn(docenteService, "eliminarDocenteService").mockResolvedValue(false);
 
-      const res = await request(app).delete("/docentes/123456789");
-      expect(res.status).toBe(200);
-      expect(res.body.mensaje).toBe("Docente eliminado correctamente");
-    });
+    await docenteController.eliminarDocente(req, res);
 
-    it("debe devolver 404 si no existe el docente", async () => {
-      eliminarDocenteServicio.mockResolvedValue({
-        success: false,
-        message: "Docente no encontrado",
-      });
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ mensaje: "Docente no encontrado" });
+  });
 
-      const res = await request(app).delete("/docentes/0000000");
-      expect(res.status).toBe(404);
-      expect(res.body.mensaje).toBe("Docente no encontrado");
-    });
+  it("eliminarDocente - error", async () => {
+    req.params = { codDocente: "1" };
+    const error = new Error("Error interno");
+    jest.spyOn(docenteService, "eliminarDocenteService").mockRejectedValue(error);
 
-    it("debe manejar errores internos", async () => {
-      eliminarDocenteServicio.mockRejectedValue(new Error("DB error"));
-      const res = await request(app).delete("/docentes/123456789");
-      expect(res.status).toBe(500);
-      expect(res.body.mensaje).toBe("Error interno del servidor");
-    });
+    await docenteController.eliminarDocente(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: error.message });
   });
 });

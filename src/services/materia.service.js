@@ -1,23 +1,43 @@
-import { MateriaRepository } from "../repositories/materia.repository.js";
+import MateriaRepository from "../repositories/materia.repository.js";
 
-export const MateriaService = {
-  async crearMateria(datos) {
-    return await MateriaRepository.crear(datos);
+const MateriaService = {
+  async crearMateria(data) {
+    const existe = await MateriaRepository.obtenerMateriaPorCodigo(
+      data.codigoMateria
+    );
+    if (existe) throw new Error("La materia ya existe");
+    return await MateriaRepository.crearMateria(data);
   },
 
-  async listarMaterias() {
-    return await MateriaRepository.obtenerTodas();
+  async obtenerMaterias() {
+    return await MateriaRepository.obtenerMaterias();
   },
 
-  async obtenerMateria(id) {
-    return await MateriaRepository.obtenerPorId(id);
+  async obtenerMateriaPorCodigo(codigoMateria) {
+    const materia = await MateriaRepository.obtenerMateriaPorCodigo(
+      codigoMateria
+    );
+    if (!materia) throw new Error("Materia no encontrada");
+    return materia;
   },
 
-  async actualizarMateria(id, datos) {
-    return await MateriaRepository.actualizar(id, datos);
+  async actualizarMateria(codigoMateria, data) {
+    const materia = await MateriaRepository.obtenerMateriaPorCodigo(
+      codigoMateria
+    );
+    if (!materia) throw new Error("Materia no encontrada");
+    await MateriaRepository.actualizarMateria(codigoMateria, data);
+    return { mensaje: "Materia actualizada correctamente" };
   },
 
-  async eliminarMateria(id) {
-    return await MateriaRepository.eliminar(id);
+  async eliminarMateria(codigoMateria) {
+    const materia = await MateriaRepository.obtenerMateriaPorCodigo(
+      codigoMateria
+    );
+    if (!materia) throw new Error("Materia no encontrada");
+    await MateriaRepository.eliminarMateria(codigoMateria);
+    return { mensaje: "Materia eliminada correctamente" };
   },
 };
+
+export default MateriaService;

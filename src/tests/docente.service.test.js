@@ -1,72 +1,60 @@
-import {
-  crearDocenteServicio,
-  obtenerDocentesServicio,
-  obtenerDocentePorDocumentoServicio,
-  actualizarDocenteServicio,
-  eliminarDocenteServicio,
-} from "../services/docente.service.js";
+import * as docenteService from "../services/docente.service.js";
+import * as docenteRepo from "../repositories/docente.repository.js";
 
-import { DocenteRepository } from "../repositories/docente.repository.js";
-
-describe("DocenteServicio", () => {
-  const mockDatos = { nombre: "Juan", documento: "12345" };
+describe("Docente Service", () => {
+  const docenteMock = {
+    codDocente: "D001",
+    primerNombre: "Juan",
+    primerApellido: "Pérez",
+  };
 
   beforeEach(() => {
-    jest.restoreAllMocks(); // resetea todos los mocks antes de cada test
+    jest.clearAllMocks();
   });
 
-  test("crearDocenteServicio llama a crearDocente", async () => {
-    const spy = jest
-      .spyOn(DocenteRepository.prototype, "crearDocente")
-      .mockResolvedValue(mockDatos);
+  test("crearDocenteService debe crear un docente", async () => {
+    jest.spyOn(docenteRepo, "crearDocente").mockResolvedValue(docenteMock);
 
-    const res = await crearDocenteServicio(mockDatos);
+    const result = await docenteService.crearDocenteService(docenteMock);
 
-    expect(spy).toHaveBeenCalledWith(mockDatos);
-    expect(res).toEqual(mockDatos);
+    expect(docenteRepo.crearDocente).toHaveBeenCalledWith(docenteMock);
+    expect(result).toEqual(docenteMock);
   });
 
-  test("obtenerDocentesServicio llama a obtenerDocentes", async () => {
-    const spy = jest
-      .spyOn(DocenteRepository.prototype, "obtenerDocentes")
-      .mockResolvedValue([mockDatos]);
+  test("obtenerDocentePorCodigoService debe retornar un docente", async () => {
+    jest.spyOn(docenteRepo, "obtenerDocentePorCodigo").mockResolvedValue(docenteMock);
 
-    const res = await obtenerDocentesServicio();
+    const result = await docenteService.obtenerDocentePorCodigoService("D001");
 
-    expect(spy).toHaveBeenCalled();
-    expect(res).toEqual([mockDatos]);
+    expect(docenteRepo.obtenerDocentePorCodigo).toHaveBeenCalledWith("D001");
+    expect(result).toEqual(docenteMock);
   });
 
-  test("obtenerDocentePorDocumentoServicio llama a obtenerDocentePorDocumento", async () => {
-    const spy = jest
-      .spyOn(DocenteRepository.prototype, "obtenerDocentePorDocumento")
-      .mockResolvedValue(mockDatos);
+  test("obtenerTodosDocentesService debe retornar un arreglo de docentes", async () => {
+    jest.spyOn(docenteRepo, "obtenerTodosDocentes").mockResolvedValue([docenteMock]);
 
-    const res = await obtenerDocentePorDocumentoServicio("12345");
+    const result = await docenteService.obtenerTodosDocentesService();
 
-    expect(spy).toHaveBeenCalledWith("12345");
-    expect(res).toEqual(mockDatos);
+    expect(docenteRepo.obtenerTodosDocentes).toHaveBeenCalled();
+    expect(result).toEqual([docenteMock]);
   });
 
-  test("actualizarDocenteServicio llama a actualizarDocente", async () => {
-    const spy = jest
-      .spyOn(DocenteRepository.prototype, "actualizarDocente")
-      .mockResolvedValue(mockDatos);
+  test("actualizarDocenteService debe actualizar un docente", async () => {
+    const updatedDocente = { ...docenteMock, primerNombre: "Pedro" };
+    jest.spyOn(docenteRepo, "actualizarDocente").mockResolvedValue(updatedDocente);
 
-    const res = await actualizarDocenteServicio("12345", mockDatos);
+    const result = await docenteService.actualizarDocenteService("D001", { primerNombre: "Pedro" });
 
-    expect(spy).toHaveBeenCalledWith("12345", mockDatos);
-    expect(res).toEqual(mockDatos);
+    expect(docenteRepo.actualizarDocente).toHaveBeenCalledWith("D001", { primerNombre: "Pedro" });
+    expect(result).toEqual(updatedDocente);
   });
 
-  test("eliminarDocenteServicio llama a eliminarDocente", async () => {
-    const spy = jest
-      .spyOn(DocenteRepository.prototype, "eliminarDocente")
-      .mockResolvedValue(true);
+  test("eliminarDocenteService debe eliminar un docente", async () => {
+    jest.spyOn(docenteRepo, "eliminarDocente").mockResolvedValue(true);
 
-    const res = await eliminarDocenteServicio("12345");
+    const result = await docenteService.eliminarDocenteService("D001");
 
-    expect(spy).toHaveBeenCalledWith("12345");
-    expect(res).toBe(true);
+    expect(docenteRepo.eliminarDocente).toHaveBeenCalledWith("D001");
+    expect(result).toBe(true);
   });
 });

@@ -1,103 +1,80 @@
 // src/tests/materia.repository.test.js
-
-// --- Mocks antes de importar el repository ---
-jest.mock("../models/materia.model.js", () => ({
-  create: jest.fn(),
-  findAll: jest.fn(),
-  findByPk: jest.fn(),
-}));
-
-import { MateriaRepository } from "../repositories/materia.repository.js";
+import MateriaRepository from "../repositories/materia.repository.js";
 import Materia from "../models/materia.model.js";
+import Docente from "../models/docente.model.js";
+
+jest.mock("../models/materia.model.js");
+jest.mock("../models/docente.model.js");
 
 describe("MateriaRepository", () => {
-  beforeEach(() => {
+  const materiaMock = {
+    codigoMateria: "MAT101",
+    nombreMateria: "Matemáticas",
+    codDocente: "DOC1",
+  };
+
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("crear", () => {
-    it("debería crear una materia", async () => {
-      const datos = { nombre: "Matemáticas" };
-      Materia.create.mockResolvedValue(datos);
+  test("crearMateria crea un nuevo registro", async () => {
+    Materia.create.mockResolvedValue(materiaMock);
 
-      const result = await MateriaRepository.crear(datos);
+    const result = await MateriaRepository.crearMateria(materiaMock);
 
-      expect(Materia.create).toHaveBeenCalledWith(datos);
-      expect(result).toEqual(datos);
-    });
+    expect(Materia.create).toHaveBeenCalledWith(materiaMock);
+    expect(result).toEqual(materiaMock);
   });
 
-  describe("obtenerTodas", () => {
-    it("debería devolver todas las materias", async () => {
-      const materiasMock = [{ id: 1, nombre: "Matemáticas" }, { id: 2, nombre: "Física" }];
-      Materia.findAll.mockResolvedValue(materiasMock);
+  test("obtenerMaterias retorna todas las materias con docente", async () => {
+    Materia.findAll.mockResolvedValue([materiaMock]);
 
-      const result = await MateriaRepository.obtenerTodas();
+    const result = await MateriaRepository.obtenerMaterias();
 
-      expect(Materia.findAll).toHaveBeenCalled();
-      expect(result).toEqual(materiasMock);
+    expect(Materia.findAll).toHaveBeenCalledWith({
+      include: [
+        {
+          model: Docente,
+          as: "docente",
+          attributes: ["codDocente", "primerNombre", "primerApellido"],
+        },
+      ],
     });
+    expect(result).toEqual([materiaMock]);
   });
 
-  describe("obtenerPorId", () => {
-    it("debería devolver una materia existente", async () => {
-      const materiaMock = { id: 1, nombre: "Matemáticas" };
-      Materia.findByPk.mockResolvedValue(materiaMock);
+  test("obtenerMateriaPorCodigo retorna la materia específica con docente", async () => {
+    Materia.findByPk.mockResolvedValue(materiaMock);
 
-      const result = await MateriaRepository.obtenerPorId(1);
+    const result = await MateriaRepository.obtenerMateriaPorCodigo("MAT101");
 
-      expect(Materia.findByPk).toHaveBeenCalledWith(1);
-      expect(result).toEqual(materiaMock);
+    expect(Materia.findByPk).toHaveBeenCalledWith("MAT101", {
+      include: [
+        {
+          model: Docente,
+          as: "docente",
+          attributes: ["codDocente", "primerNombre", "primerApellido"],
+        },
+      ],
     });
-
-    it("debería devolver null si no existe la materia", async () => {
-      Materia.findByPk.mockResolvedValue(null);
-
-      const result = await MateriaRepository.obtenerPorId(999);
-
-      expect(result).toBeNull();
-    });
+    expect(result).toEqual(materiaMock);
   });
 
-  describe("actualizar", () => {
-    it("debería actualizar una materia existente", async () => {
-      const materiaMock = { update: jest.fn().mockResolvedValue({ nombre: "Física" }) };
-      Materia.findByPk.mockResolvedValue(materiaMock);
+  test("actualizarMateria actualiza la materia", async () => {
+    Materia.update.mockResolvedValue([1]);
 
-      const result = await MateriaRepository.actualizar(1, { nombre: "Física" });
+    const result = await MateriaRepository.actualizarMateria("MAT101", { nombreMateria: "Física" });
 
-      expect(Materia.findByPk).toHaveBeenCalledWith(1);
-      expect(materiaMock.update).toHaveBeenCalledWith({ nombre: "Física" });
-      expect(result).toEqual({ nombre: "Física" });
-    });
-
-    it("debería devolver null si no existe la materia", async () => {
-      Materia.findByPk.mockResolvedValue(null);
-
-      const result = await MateriaRepository.actualizar(999, { nombre: "Física" });
-
-      expect(result).toBeNull();
-    });
+    expect(Materia.update).toHaveBeenCalledWith({ nombreMateria: "Física" }, { where: { codigoMateria: "MAT101" } });
+    expect(result).toEqual([1]);
   });
 
-  describe("eliminar", () => {
-    it("debería eliminar una materia existente", async () => {
-      const materiaMock = { destroy: jest.fn().mockResolvedValue(true) };
-      Materia.findByPk.mockResolvedValue(materiaMock);
+  test("eliminarMateria elimina la materia", async () => {
+    Materia.destroy.mockResolvedValue(1);
 
-      const result = await MateriaRepository.eliminar(1);
+    const result = await MateriaRepository.eliminarMateria("MAT101");
 
-      expect(Materia.findByPk).toHaveBeenCalledWith(1);
-      expect(materiaMock.destroy).toHaveBeenCalled();
-      expect(result).toBe(materiaMock);
-    });
-
-    it("debería devolver null si no existe la materia", async () => {
-      Materia.findByPk.mockResolvedValue(null);
-
-      const result = await MateriaRepository.eliminar(999);
-
-      expect(result).toBeNull();
-    });
+    expect(Materia.destroy).toHaveBeenCalledWith({ where: { codigoMateria: "MAT101" } });
+    expect(result).toEqual(1);
   });
 });

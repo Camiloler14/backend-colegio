@@ -1,23 +1,28 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
-import Docente from "./docente.model.js";
 
 const Materia = sequelize.define(
   "Materia",
   {
     codigoMateria: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
       primaryKey: true,
-      autoIncrement: true,
     },
     nombreMateria: {
       type: DataTypes.STRING(100),
       allowNull: false,
     },
-    codigoDocente: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: { model: Docente, key: "codigo" },
+    codDocente: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      references: {
+        model: "docentes",
+        key: "codDocente",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
     },
   },
   {
@@ -25,15 +30,5 @@ const Materia = sequelize.define(
     timestamps: false,
   }
 );
-
-Materia.belongsTo(Docente, {
-  foreignKey: "codigoDocente",
-  as: "docente",
-});
-
-Docente.hasMany(Materia, {
-  foreignKey: "codigoDocente",
-  as: "materias",
-});
 
 export default Materia;

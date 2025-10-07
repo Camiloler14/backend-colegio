@@ -1,40 +1,103 @@
-import docenteRepo from '../repositories/docente.repository.js';
+import * as docenteRepo from "../repositories/docente.repository.js";
+import Docente from "../models/docente.model.js";
+import Usuario from "../models/usuario.model.js";
+import Materia from "../models/materia.model.js";
 
-jest.mock('../repositories/docente.repository.js', () => ({
-  crearDocente: jest.fn(),
-  obtenerDocentes: jest.fn(),
-  eliminarDocente: jest.fn(),
-}));
+// Mock de Sequelize
+jest.mock("../models/docente.model.js");
+jest.mock("../models/usuario.model.js");
+jest.mock("../models/materia.model.js");
 
-describe('Repositorio de Docente', () => {
+describe("Docente Repository", () => {
+  const docenteMock = {
+    codDocente: "D001",
+    primerNombre: "Juan",
+    primerApellido: "Pérez",
+    save: jest.fn(),
+    destroy: jest.fn(),
+  };
 
-  it('crearDocente debe crear un docente correctamente', async () => {
-    const mockDocente = { primerNombre: "Juan", primerApellido: "Lerma", documento: "12345", codigo: "1010" };
-    docenteRepo.crearDocente.mockResolvedValue({ success: true, data: mockDocente });
-
-    const result = await docenteRepo.crearDocente(mockDocente);
-
-    expect(result).toEqual({ success: true, data: mockDocente });
-    expect(docenteRepo.crearDocente).toHaveBeenCalledWith(mockDocente);
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('obtenerDocentes debe retornar una lista de docentes', async () => {
-    const mockLista = [{ primerNombre: "Juan", primerApellido: "Lerma" }];
-    docenteRepo.obtenerDocentes.mockResolvedValue({ success: true, data: mockLista });
+  test("crearDocente crea un docente correctamente", async () => {
+    Docente.create.mockResolvedValue(docenteMock);
+    const result = await docenteRepo.crearDocente(docenteMock);
 
-    const result = await docenteRepo.obtenerDocentes();
-
-    expect(result).toEqual({ success: true, data: mockLista });
-    expect(docenteRepo.obtenerDocentes).toHaveBeenCalled();
+    expect(Docente.create).toHaveBeenCalledWith(docenteMock);
+    expect(result).toEqual(docenteMock);
   });
 
-  it('eliminarDocente debe eliminar un docente por ID', async () => {
-    docenteRepo.eliminarDocente.mockResolvedValue({ success: true, message: "Docente eliminado correctamente" });
+  test("obtenerDocentePorCodigo devuelve un docente con relaciones", async () => {
+    const docenteConRelaciones = {
+      ...docenteMock,
+      usuario: { codUsuario: "U001", nombre: "Admin", rol: "docente" },
+      materias: [],
+    };
 
-    const result = await docenteRepo.eliminarDocente("12345");
+    Docente.findOne.mockResolvedValue(docenteConRelaciones);
 
-    expect(result).toEqual({ success: true, message: "Docente eliminado correctamente" });
-    expect(docenteRepo.eliminarDocente).toHaveBeenCalledWith("12345");
+    const result = await docenteRepo.obtenerDocentePorCodigo("D001");
+
+    expect(Docente.findOne).toHaveBeenCalledWith({
+      where: { codDocente: "D001" },
+      include: [
+        { model: Usuario, as: "usuario", attributes: ["codUsuario", "nombre", "rol"] },
+        { model: Materia, as: "materias" },
+      ],
+    });
+    expect(result.usuario.codUsuario).toBe("U001");
   });
 
+  test("obtenerTodosDocentes devuelve todos los docentes con relaciones", async () => {
+    Docente.findAll.mockResolvedValue([docenteMock]);
+
+    const result = await docenteRepo.obtenerTodosDocentes();
+
+    expect(Docente.findAll).toHaveBeenCalledWith({
+      include: [
+        { model: Usuario, as: "usuario", attributes: ["codUsuario", "nombre", "rol"] },
+        { model: Materia, as: "materias" },
+      ],
+    });
+    expect(result).toHaveLength(1);
+  });
+
+  test("actualizarDocente actualiza un docente existente", async () => {
+    Docente.findByPk.mockResolvedValue(docenteMock);
+    const dataUpdate = { primerNombre: "Carlos" };
+
+    const result = await docenteRepo.actualizarDocente("D001", dataUpdate);
+
+    expect(Docente.findByPk).toHaveBeenCalledWith("D001");
+    expect(docenteMock.save).toHaveBeenCalled();
+    expect(result.primerNombre).toBe("Carlos");
+  });
+
+  test("actualizarDocente devuelve null si no existe", async () => {
+    Docente.findByPk.mockResolvedValue(null);
+
+    const result = await docenteRepo.actualizarDocente("D002", { primerNombre: "Carlos" });
+
+    expect(result).toBeNull();
+  });
+
+  test("eliminarDocente elimina un docente existente", async () => {
+    Docente.findByPk.mockResolvedValue(docenteMock);
+
+    const result = await docenteRepo.eliminarDocente("D001");
+
+    expect(Docente.findByPk).toHaveBeenCalledWith("D001");
+    expect(docenteMock.destroy).toHaveBeenCalled();
+    expect(result).toEqual(docenteMock);
+  });
+
+  test("eliminarDocente devuelve null si no existe", async () => {
+    Docente.findByPk.mockResolvedValue(null);
+
+    const result = await docenteRepo.eliminarDocente("D002");
+
+    expect(result).toBeNull();
+  });
 });

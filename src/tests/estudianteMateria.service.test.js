@@ -4,61 +4,56 @@ import { EstudianteMateriaRepository } from "../repositories/estudianteMateria.r
 jest.mock("../repositories/estudianteMateria.repository.js");
 
 describe("EstudianteMateriaService", () => {
+  const inscripcionMock = { codEstudiante: "E001", codMateria: "M001", nota: 5 };
+  const materiasMock = [{ codMateria: "M001", nombre: "Matemáticas" }];
+  const estudiantesMock = [{ codEstudiante: "E001", nombre: "Juan" }];
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  test("inscribirEstudiante llama a EstudianteMateriaRepository.inscribir", async () => {
-    const datos = { codigoEstudiante: "1001", codigoMateria: "MAT01" };
-    EstudianteMateriaRepository.inscribir.mockResolvedValue(datos);
+  test("inscribirEstudiante llama al repositorio y devuelve resultado", async () => {
+    EstudianteMateriaRepository.inscribir.mockResolvedValue(inscripcionMock);
 
-    const res = await EstudianteMateriaService.inscribirEstudiante(datos);
+    const result = await EstudianteMateriaService.inscribirEstudiante(inscripcionMock);
 
-    expect(EstudianteMateriaRepository.inscribir).toHaveBeenCalledWith(datos);
-    expect(res).toEqual(datos);
+    expect(EstudianteMateriaRepository.inscribir).toHaveBeenCalledWith(inscripcionMock);
+    expect(result).toEqual(inscripcionMock);
   });
 
-  test("obtenerMateriasDeEstudiante llama a EstudianteMateriaRepository.obtenerPorEstudiante", async () => {
-    const materiasMock = [{ codigo: "MAT01" }];
+  test("obtenerMateriasDeEstudiante devuelve las materias de un estudiante", async () => {
     EstudianteMateriaRepository.obtenerPorEstudiante.mockResolvedValue(materiasMock);
 
-    const res = await EstudianteMateriaService.obtenerMateriasDeEstudiante("1001");
+    const result = await EstudianteMateriaService.obtenerMateriasDeEstudiante("E001");
 
-    expect(EstudianteMateriaRepository.obtenerPorEstudiante).toHaveBeenCalledWith("1001");
-    expect(res).toEqual(materiasMock);
+    expect(EstudianteMateriaRepository.obtenerPorEstudiante).toHaveBeenCalledWith("E001");
+    expect(result).toEqual(materiasMock);
   });
 
-  test("obtenerEstudiantesDeMateria llama a EstudianteMateriaRepository.obtenerPorMateria", async () => {
-    const estudiantesMock = [{ codigoEstudiante: "1001" }];
+  test("obtenerEstudiantesDeMateria devuelve los estudiantes de una materia", async () => {
     EstudianteMateriaRepository.obtenerPorMateria.mockResolvedValue(estudiantesMock);
 
-    const res = await EstudianteMateriaService.obtenerEstudiantesDeMateria("MAT01");
+    const result = await EstudianteMateriaService.obtenerEstudiantesDeMateria("M001");
 
-    expect(EstudianteMateriaRepository.obtenerPorMateria).toHaveBeenCalledWith("MAT01");
-    expect(res).toEqual(estudiantesMock);
+    expect(EstudianteMateriaRepository.obtenerPorMateria).toHaveBeenCalledWith("M001");
+    expect(result).toEqual(estudiantesMock);
   });
 
-  test("actualizarNotas llama a EstudianteMateriaRepository.actualizarNotas", async () => {
-    const datos = { nota: 5.0 };
-    const updatedMock = { codigoEstudiante: "1001", codigoMateria: "MAT01", nota: 5.0 };
-    EstudianteMateriaRepository.actualizarNotas.mockResolvedValue(updatedMock);
+  test("actualizarNotas llama al repositorio y devuelve resultado", async () => {
+    EstudianteMateriaRepository.actualizarNotas.mockResolvedValue([1]);
 
-    const res = await EstudianteMateriaService.actualizarNotas("1001", "MAT01", datos);
+    const result = await EstudianteMateriaService.actualizarNotas("E001", "M001", { nota: 4 });
 
-    expect(EstudianteMateriaRepository.actualizarNotas).toHaveBeenCalledWith(
-      "1001",
-      "MAT01",
-      datos
-    );
-    expect(res).toEqual(updatedMock);
+    expect(EstudianteMateriaRepository.actualizarNotas).toHaveBeenCalledWith("E001", "M001", { nota: 4 });
+    expect(result).toEqual([1]);
   });
 
-  test("eliminarInscripcion llama a EstudianteMateriaRepository.eliminar", async () => {
+  test("eliminarInscripcion llama al repositorio y devuelve resultado", async () => {
     EstudianteMateriaRepository.eliminar.mockResolvedValue(true);
 
-    const res = await EstudianteMateriaService.eliminarInscripcion("1001", "MAT01");
+    const result = await EstudianteMateriaService.eliminarInscripcion("E001", "M001");
 
-    expect(EstudianteMateriaRepository.eliminar).toHaveBeenCalledWith("1001", "MAT01");
-    expect(res).toBe(true);
+    expect(EstudianteMateriaRepository.eliminar).toHaveBeenCalledWith("E001", "M001");
+    expect(result).toBe(true);
   });
 });
