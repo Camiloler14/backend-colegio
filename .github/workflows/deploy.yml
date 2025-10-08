@@ -1,0 +1,46 @@
+name: CI/CD Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # Se ejecuta al hacer push al branch main
+
+jobs:
+  deploy:
+    name: Build and Deploy Docker on EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Clonar repositorio (solo para revisar código si necesitas)
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2️⃣ Deploy y build directamente en EC2
+      - name: Build and deploy on EC2
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            echo "🔹 Actualizando repo en EC2..."
+            cd /home/ubuntu/backend-colegio
+            git reset --hard
+            git pull origin main
+
+            echo "🔹 Construyendo la imagen Docker..."
+            docker build -t backend-colegio:latest .
+
+            echo "🔹 Deteniendo y eliminando contenedor anterior..."
+            docker stop backend-colegio || true
+            docker rm backend-colegio || true
+
+            echo "🔹 Levantando nuevo contenedor..."
+            docker run -d -p 3000:3000 \
+              --env-file /home/ubuntu/backend-colegio/.env \
+              --name backend-colegio backend-colegio:latest
+
+            echo "✅ Despliegue completado. Contenedores activos:"
+            docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+
