@@ -64,17 +64,18 @@ export const eliminarUsuario = async (req, res) => {
 
 export const loginUsuario = async (req, res) => {
   try {
-    const { codUsuario, contraseña } = req.body;
+    const { codUsuario, password } = req.body; 
+    console.log("Datos recibidos en login:", req.body);
 
-    const usuario = await usuarioService.obtenerUsuarioPorCodigoService(
-      codUsuario
-    );
-    if (!usuario)
-      return res.status(404).json({ mensaje: "Usuario no encontrado" });
+    if (!codUsuario || !password) {
+      return res.status(400).json({ mensaje: "codUsuario y password requeridos" });
+    }
 
-    const match = await bcrypt.compare(contraseña, usuario.contraseña);
-    if (!match)
-      return res.status(401).json({ mensaje: "Contraseña incorrecta" });
+    const usuario = await usuarioService.obtenerUsuarioPorCodigoService(codUsuario);
+    if (!usuario) return res.status(404).json({ mensaje: "Usuario no encontrado" });
+
+    const match = await bcrypt.compare(password, usuario.password); 
+    if (!match) return res.status(401).json({ mensaje: "Password incorrecto" });
 
     const token = jwt.sign(
       { codUsuario: usuario.codUsuario, rol: usuario.rol },
@@ -84,7 +85,7 @@ export const loginUsuario = async (req, res) => {
 
     res.json({ mensaje: "Login exitoso", token });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ mensaje: "Error interno del servidor" });
+    console.error("Error en loginUsuario:", error);
+    res.status(500).json({ mensaje: "Error interno del servidor", error: error.message });
   }
 };

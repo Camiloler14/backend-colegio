@@ -7,7 +7,7 @@ describe("UsuarioService", () => {
   const usuarioMock = {
     codUsuario: "U001",
     nombre: "Juan",
-    contraseña: "1234",
+    password: "1234",
     rol: "estudiante",
   };
 

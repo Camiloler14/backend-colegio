@@ -47,7 +47,7 @@ router.post("/", crearUsuario);
  *               codUsuario:
  *                 type: string
  *                 example: "123456"
- *               contraseña:
+ *               password:
  *                 type: string
  *                 example: "12345"
  *     responses:

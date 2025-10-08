@@ -18,7 +18,7 @@ import { Usuario } from "./models/asociaciones.js";
         codUsuario: "123456",
         nombre: "Administrador",
         rol: "admin",
-        contraseña: await bcrypt.hash("12345", 10),
+        password: await bcrypt.hash("12345", 10),
       },
     });
 

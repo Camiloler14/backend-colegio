@@ -10,7 +10,7 @@ export const obtenerUsuarioPorCodigo = async (codUsuario) => {
 
 export const obtenerTodosUsuarios = async () => {
   return await Usuario.findAll({
-    attributes: { exclude: ["contraseña"] },
+    attributes: { exclude: ["password"] },
   });
 };
 
@@ -19,14 +19,14 @@ export const actualizarUsuario = async (codUsuario, data) => {
   if (!usuario) return null;
   if (data.nombre) usuario.nombre = data.nombre;
   if (data.rol) usuario.rol = data.rol;
-  if (data.contraseña) {
-    usuario.contraseña = data.contraseña;
+  if (data.password) {
+    usuario.password = data.password;
   }
 
   await usuario.save();
 // eslint-disable-next-line no-unused-vars
-  const { contraseña, ...usuarioSinContraseña } = usuario.toJSON();
-  return usuarioSinContraseña;
+  const { password, ...usuarioSinPassword } = usuario.toJSON();
+  return usuarioSinPassword;
 };
 
 export const eliminarUsuario = async (codUsuario) => {
