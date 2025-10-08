@@ -8,7 +8,7 @@ describe("UsuarioRepository", () => {
     codUsuario: "U123",
     nombre: "Juan",
     rol: "estudiante",
-    contraseña: "hashedpass",
+    password: "hashedpass",
     toJSON: function () { return { codUsuario: this.codUsuario, nombre: this.nombre, rol: this.rol }; }
   };
 
@@ -34,12 +34,12 @@ describe("UsuarioRepository", () => {
     expect(result).toEqual(usuarioMock);
   });
 
-  test("obtenerTodosUsuarios retorna todos los usuarios excluyendo contraseña", async () => {
+  test("obtenerTodosUsuarios retorna todos los usuarios excluyendo password", async () => {
     Usuario.findAll.mockResolvedValue([usuarioMock]);
 
     const result = await UsuarioRepository.obtenerTodosUsuarios();
 
-    expect(Usuario.findAll).toHaveBeenCalledWith({ attributes: { exclude: ["contraseña"] } });
+    expect(Usuario.findAll).toHaveBeenCalledWith({ attributes: { exclude: ["password"] } });
     expect(result).toEqual([usuarioMock]);
   });
 

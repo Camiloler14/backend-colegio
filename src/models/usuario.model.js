@@ -12,7 +12,7 @@ const Usuario = sequelize.define(
       unique: true,
     },
     nombre: { type: DataTypes.STRING, allowNull: false },
-    contraseña: { type: DataTypes.STRING, allowNull: false },
+    password: { type: DataTypes.STRING, allowNull: false },
     rol: {
       type: DataTypes.ENUM("admin", "estudiante", "docente"),
       allowNull: false,
@@ -23,16 +23,16 @@ const Usuario = sequelize.define(
     timestamps: false,
     hooks: {
       beforeCreate: async (usuario) => {
-        if (usuario.contraseña && !usuario.contraseña.startsWith("$2b$")) {
-          usuario.contraseña = await bcrypt.hash(usuario.contraseña, 10);
+        if (usuario.password && !usuario.password.startsWith("$2b$")) {
+          usuario.password = await bcrypt.hash(usuario.password, 10);
         }
       },
       beforeUpdate: async (usuario) => {
         if (
-          usuario.changed("contraseña") &&
-          !usuario.contraseña.startsWith("$2b$")
+          usuario.changed("password") &&
+          !usuario.password.startsWith("$2b$")
         ) {
-          usuario.contraseña = await bcrypt.hash(usuario.contraseña, 10);
+          usuario.password = await bcrypt.hash(usuario.password, 10);
         }
       },
     },

@@ -14,16 +14,15 @@ dotenv.config({ quiet: true });
 
 const app = express();
 
-// Configuración de CORS
 const allowedOrigins = [
-  /^http:\/\/127\.0\.0\.1:\d+$/,  // cualquier puerto en localhost
-  /^http:\/\/localhost:\d+$/      // cualquier puerto en localhost
+  /^http:\/\/127\.0\.0\.1:\d+$/,  
+  /^http:\/\/localhost:\d+$/      
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // Postman, curl, servidores backend
+      if (!origin) return callback(null, true); 
       if (allowedOrigins.some((pattern) => pattern.test(origin))) {
         return callback(null, true);
       } else {
