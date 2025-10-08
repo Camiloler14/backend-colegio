@@ -14,15 +14,21 @@ dotenv.config({ quiet: true });
 
 const app = express();
 
-// Configuración de CORS
 const allowedOrigins = [
-  /^http:\/\/127\.0\.0\.1:\d+$/,  // cualquier puerto en localhost
-  /^http:\/\/localhost:\d+$/       // cualquier puerto en localhost
+  /^http:\/\/127\.0\.0\.1:\d+$/,  
+  /^http:\/\/localhost:\d+$/      
 ];
 
 app.use(
   cors({
-    origin: "*", // permite cualquier origen (para pruebas)
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); 
+      if (allowedOrigins.some((pattern) => pattern.test(origin))) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("CORS no permitido"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
   })
@@ -30,7 +36,6 @@ app.use(
 
 app.use(express.json());
 
-// Rutas de la API
 app.use("/api/usuario", usuarioRoutes);
 app.use("/api/estudiante", estudianteRoutes);
 app.use("/api/docente", docenteRoutes);
@@ -39,14 +44,4 @@ app.use("/api/inscripciones", estudianteMateriaRoutes);
 
 swaggerDocs(app);
 
-// Middleware global para manejo de errores
-app.use((err, req, res, next) => {
-  console.error("Error capturado:", err);
-  res.status(err.status || 500).json({
-    success: false,
-    mensaje: err.message || "Error interno del servidor",
-  });
-});
-
 export default app;
-
