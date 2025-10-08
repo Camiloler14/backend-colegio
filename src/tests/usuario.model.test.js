@@ -15,7 +15,7 @@ describe("Modelo Usuario", () => {
     const data = {
       codUsuario: "U001",
       nombre: "Camilo",
-      contraseña: "123456",
+      password: "123456",
       rol: "estudiante",
     };
 
@@ -27,8 +27,8 @@ describe("Modelo Usuario", () => {
     expect(usuario.rol).toBe(data.rol);
 
   
-    expect(usuario.contraseña).not.toBe(data.contraseña);
-    const match = await bcrypt.compare(data.contraseña, usuario.contraseña);
+    expect(usuario.password).not.toBe(data.password);
+    const match = await bcrypt.compare(data.password, usuario.password);
     expect(match).toBe(true);
   });
 
@@ -38,30 +38,30 @@ describe("Modelo Usuario", () => {
     const data = {
       codUsuario: "U002",
       nombre: "Juan",
-      contraseña: hashed,
+      password: hashed,
       rol: "docente",
     };
 
     const usuario = await Usuario.create(data);
 
-    expect(usuario.contraseña).toBe(hashed); 
+    expect(usuario.password).toBe(hashed); 
   });
 
   test("Se puede actualizar la contraseña y se vuelve a hashear", async () => {
     const data = {
       codUsuario: "U003",
       nombre: "Laura",
-      contraseña: "pass123",
+      password: "pass123",
       rol: "admin",
     };
 
     const usuario = await Usuario.create(data);
 
-    usuario.contraseña = "nuevaPass";
+    usuario.password = "nuevaPass";
     await usuario.save();
 
-    expect(usuario.contraseña).not.toBe("nuevaPass");
-    const match = await bcrypt.compare("nuevaPass", usuario.contraseña);
+    expect(usuario.password).not.toBe("nuevaPass");
+    const match = await bcrypt.compare("nuevaPass", usuario.password);
     expect(match).toBe(true);
   });
 
